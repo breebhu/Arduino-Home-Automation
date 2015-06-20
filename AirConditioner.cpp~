@@ -1,6 +1,6 @@
 #include "AirConditioner.h"
 
-Airconditoner::AirConditioner(int markl,int space0,int space1, int hmark, int hspace, int gap, byte freq,unsigned long*** D,unsgined long offD[],byte tlevels,int fspeeds,byte pin,byte tmax,byte tmin):MARK_LENGTH(markl),SPACE0(space0),SPACE1(space1),HMARK(hmark),HSPACE(hspace),GAP(gap),FREQUENCY(freq),acPin(pin),T_MAX(tmax),T_MIN(tmin)
+AirConditioner::AirConditioner(int markl,int space0,int space1, int hmark, int hspace, int gap, byte freq,unsigned long*** D,unsigned long offD[],byte tlevels,int fspeeds,byte pin,byte tmax,byte tmin):MARK_LENGTH(markl),SPACE0(space0),SPACE1(space1),HMARK(hmark),HSPACE(hspace),GAP(gap),frequency(freq),acPin(pin),T_MAX(tmax),T_MIN(tmin)
 {
 	data=D;
 	offData[0]=offD[0];
@@ -17,11 +17,11 @@ void AirConditioner::set(byte temperature, byte fspeed)
 	sendData(data[tempHash(temperature)][fspeed-1][0],data[tempHash(temperature)][fspeed-1][1]);
 	TEMPERATURE=temperature;
 	FAN_SPEED=fspeed;
-	STATE=ON;
+	STATE=STATE_ON;
 }
 void AirConditioner::sendData(unsigned long data0,unsigned long data01)
 {
-  irsend.enableIROut(FREQUENCY);
+  irsend.enableIROut(frequency);
   irsend.mark(HMARK);
   irsend.space(HSPACE);
   for (int i = 0; i < 24; i++) {
@@ -52,9 +52,9 @@ void AirConditioner::sendData(unsigned long data0,unsigned long data01)
 void AirConditioner::off()
 {
    sendData(offData[0],offData[1]);
-   STATE=OFF;
+   STATE=STATE_OFF;
 }
-byte Airconditioner::getTemp()
+byte AirConditioner::getTemp()
 {
     return TEMPERATURE;
 }
@@ -68,5 +68,5 @@ byte AirConditioner::getState()
 }
 int AirConditioner::tempHash(byte t)
 {
-    return (byte)(t-MIN_T);
+    return (byte)(t-T_MIN);
 }
