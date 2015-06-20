@@ -43,30 +43,45 @@ byte AC_CUTOFF=24;
 byte AC_AMBIENT_TEMP=22;
 byte DEFAULT_AC_FAN_SPEED=1;
 const byte T5=24,T4=20,T3=16,T2=14,T1=12;
-const byte LIGHT_THRESHOLD=600;
-const byte L1=500,L2=400,L3=300;
-
+const int LIGHT_THRESHOLD=600;
+const int L1=500,L2=400,L3=300;
+const byte RH_THRESHOLD=55;
 //Appliances
 byte* fanRegulatePins=new byte[3];  //For readability
 fanRegulatePins[0]=27;  //Initialize pins
 fanRegulatePins[1]=28;
-fanRegulatePins[2]=29;
-extern Fan* F1=new Fan(26,fanRegulatePins,3);   
+fanRegulatePins[2]=29;   
 byte* lightRegulatePins=new byte[3];
 lightRegulatePins[0]=23;
 lightRegulatePins[1]=24;
 lightRegulatePins[2]=25;
-extern Light* L=new Light(22,lightRegulatePins,3);
-unsigned long data[13][3][2];
-
+Light* L;
+Fan* F1;
+unsigned long data[2][3][2];// data for 24 and 25 C for TL AC
+data[0][1][0]=0xB24D5F;
+data[0][1][1]=0xA040BF;
+data[0][0][0]=0xB24D9F;
+data[0][0][1]=0x6040BF;
+data[0][2][0]=0xB24D3F;
+data[0][2][1]=0xC040BF;
+data[1][0][0]=0xB24D9F;
+data[1][0][1]=0x60C03F;
+data[1][1][0]=0xB24D5F;
+data[1][1][1]=0xA0C03F;
+data[1][2][0]=0xB24D3F;
+data[1][2][1]=0xC0C03F;
 unsigned long offData[2];
-extern AirConditioner* AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,,,2,3,9);
+offData[0]=0xB24D7B;
+offData[1]=0x84E01F;
+AirConditioner* AC1;
 void setup()
 {
    //start the system
    //initialize devices
    //while uploading sync time to PC
-   
+F1=new Fan(26,fanRegulatePins,3);
+L=new Light(22,lightRegulatePins,3);   
+AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
    // start the Ethernet connection and the server:
    Ethernet.begin(mac, ip);
    server.begin();
@@ -85,13 +100,13 @@ void loop()
       {
         F1->off();
       }
-      if(AC_STATE!=ON)acON(); //Change once header is done
-      setAC(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
+      if(AC_STATE!=ON)AC1->on(); //Change once header is done
+      AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
     }
     else if(TEMPERATURE<AC_CUTOFF)
     {
-      acOFF();
-      if(TEMPERATURE>T5)   //Humidity instead of temperature seems like a better option
+      AC1->off();
+      if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)
       F1->regulate(5);
       else if(TEMPERATURE>T4)
       F1->regulate(4);
