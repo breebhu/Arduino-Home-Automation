@@ -1,6 +1,6 @@
 #include "AirConditioner.h"
 
-Airconditoner::AirConditioner(int markl,int space0,int space1, int hmark, int hspace, int gap, byte freq,unsigned long*** D,unsgined long offD[],byte tlevels,intfspeeds,byte pin,byte tmax,byte tmin):MARK_LENGTH(markl),SPACE0(space0),SPACE1(space1),HMARK(hmark),HSPACE(hspace),GAP(gap),FREQUENCY(freq),acPin(pin),T_MAX(tmax),T_MIN(tmin)
+Airconditoner::AirConditioner(int markl,int space0,int space1, int hmark, int hspace, int gap, byte freq,unsigned long*** D,unsgined long offD[],byte tlevels,int fspeeds,byte pin,byte tmax,byte tmin):MARK_LENGTH(markl),SPACE0(space0),SPACE1(space1),HMARK(hmark),HSPACE(hspace),GAP(gap),FREQUENCY(freq),acPin(pin),T_MAX(tmax),T_MIN(tmin)
 {
 	data=D;
 	offData[0]=offD[0];
@@ -66,7 +66,7 @@ byte AirConditioner::getState()
 {
    return STATE;
 }
-int tempHash(byte t)
+int AirConditioner::tempHash(byte t)
 {
     return (byte)(t-MIN_T);
 }

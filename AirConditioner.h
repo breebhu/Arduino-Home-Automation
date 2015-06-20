@@ -4,8 +4,8 @@
 #include <Arduino.h>
 #include<IRremote.h>
 #define TOPBIT 0x800000
-#define ON 1
-#define OFF 0
+#define STATE_ON 1
+#define STATE_OFF 0
 class AirConditioner
 {
   private:
@@ -28,7 +28,7 @@ class AirConditioner
    byte T_MIN;
    byte T_MAX;
   public:
-	AirConditioner(int markl,int space0,int space1, int hmark, int hspace, int gap, byte freq,unsigned long*** D,unsigned long offD[],byte tlevels,intfspeeds,byte pin,byte tmax,byte tmin);
+	AirConditioner(int markl,int space0,int space1, int hmark, int hspace, int gap, byte freq,unsigned long*** D,unsigned long offD[],byte tlevels,int fspeeds,byte pin,byte tmax,byte tmin);
  	void sendData(unsigned long data0,unsigned long data1);
 	void off();
 	void set(byte temperature,byte fspeed);
