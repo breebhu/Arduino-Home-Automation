@@ -57,7 +57,7 @@ lightRegulatePins[1]=24;
 lightRegulatePins[2]=25;
 Light* L;
 Fan* F1;
-unsigned long data[2][3][2];// data for 24 and 25 C for TL AC
+unsigned long*** data=new unsigned long[2][3][2];// data for 24 and 25 C for TL AC
 data[0][1][0]=0xB24D5F;
 data[0][1][1]=0xA040BF;
 data[0][0][0]=0xB24D9F;
@@ -70,7 +70,7 @@ data[1][1][0]=0xB24D5F;
 data[1][1][1]=0xA0C03F;
 data[1][2][0]=0xB24D3F;
 data[1][2][1]=0xC0C03F;
-unsigned long offData[2];
+unsigned long* offData=new usnigned long[2];
 offData[0]=0xB24D7B;
 offData[1]=0x84E01F;
 AirConditioner* AC1;
