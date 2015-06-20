@@ -1,5 +1,5 @@
 #include <Light.h>
-
+#include <AirConditioner.h>
 #include <Fan.h>
 
 #include <SPI.h>
@@ -48,7 +48,7 @@ const byte L1=500,L2=400,L3=300;
 
 //Appliances
 byte* fanRegulatePins=new byte[3];  //For readability
-fanRegulatePins[0]=27;  //Need to be intialised since it is not initialised anywhere later
+fanRegulatePins[0]=27;  //Initialize pins
 fanRegulatePins[1]=28;
 fanRegulatePins[2]=29;
 extern Fan* F1=new Fan(26,fanRegulatePins,3);   
@@ -56,8 +56,11 @@ byte* lightRegulatePins=new byte[3];
 lightRegulatePins[0]=23;
 lightRegulatePins[1]=24;
 lightRegulatePins[2]=25;
-extern Light* L=new Light(22,fanRegulatePins,3);
+extern Light* L=new Light(22,lightRegulatePins,3);
+unsigned long data[13][3][2];
 
+unsigned long offData[2];
+extern AirConditioner* AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,,,2,3,9);
 void setup()
 {
    //start the system
