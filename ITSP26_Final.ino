@@ -33,7 +33,7 @@ byte AC_STATE=OFF;
 //Sensors
 byte NUM_PERSONS=0;
 boolean NO_MOTION=false;
-byte LIGHT_INTENSITY=0;
+int LIGHT_INTENSITY=0;
 byte TEMPERATURE=0;
 byte HUMIDITY=0;
 
@@ -43,8 +43,8 @@ byte AC_CUTOFF=24;
 byte AC_AMBIENT_TEMP=22;
 byte DEFAULT_AC_FAN_SPEED=1;
 const byte T5=24,T4=20,T3=16,T2=14,T1=12;
-const byte LIGHT_THRESHOLD=600;
-const byte L1=500,L2=400,L3=300;
+const int LIGHT_THRESHOLD=600;
+const int L1=500,L2=400,L3=300;
 
 //Appliances
 byte* fanRegulatePins=new byte[3];  //For readability
@@ -56,7 +56,7 @@ byte* lightRegulatePins=new byte[3];
 lightRegulatePins[0]=23;
 lightRegulatePins[1]=24;
 lightRegulatePins[2]=25;
-extern Light* L=new Light(22,fanRegulatePins,3);
+extern Light* L=new Light(22,lightRegulatePins,3);
 
 void setup()
 {
@@ -227,3 +227,122 @@ void readSensorData()
   
 }
 
+void lightRecommend(EthernetClient cl)
+{
+    if(LIGHT_INTENSITY<LIGHT_THRESHOLD)   //dim(1) means highly dim, dim(3) is very bright
+    {
+       cl.println("on at brightness ");
+      if(LIGHT_INTENSITY<L1)
+         cl.println("1</p>");
+      else if(LIGHT_INTENSITY<L2)
+         cl.println("2</p>");
+      else if(LIGHT_INTENSITY<L3)
+         cl.println("3</p>");
+    }
+    else
+      cl.println("off</p>");
+}
+
+void sendManualPage(EthernetClient cl)
+{
+   cl.println("<!DOCTYPE html");
+   cl.println("<html>");
+   cl.println("<head>");
+   cl.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />");
+   cl.println("<title>Manual Mode</title>");
+   cl.println("</head>");
+   cl.println("<body>");
+   cl.println("<h1>Currently in manual mode. Go to the auto mode page to set it to auto and/or change the auto mode settings.<h1>"); //Uncomment
+   cl.println("<form method=\"get\">");
+   cl.println("<h2>Lights</h2>");
+   if(L->getState()==ON) //Light on/off
+   {
+      cl.println("<input type=\"radio\" id=\"lightOnButton\" value=\"1\" name=\"lightButton\" checked=\"checked\"/>On");
+      cl.println("<input type=\"radio\" id=\"lightOffButton\" value=\"0\" name=\"lightButton\"/>Off");
+   }
+   else
+   {
+      cl.println("<input type=\"radio\" id=\"lightOnButton\" value=\"1\" name=\"lightButton\" />On");
+      cl.println("<input type=\"radio\" id=\"lightOffButton\" value=\"0\" name=\"lightButton\" checked=\"checked\"/>Off");
+   }
+   cl.println("<br/>");
+   cl.println("Brightness:<input type=\"number\" id=\"lightBrightness\" name=\"lightBrightness\" min=\"0\" max=\"3\""); //Brightness
+   if(L->getState()==OFF)
+      cl.println("value=\"0\" />");
+   else if(L->getDimLevel()==1)
+      cl.println("value=\"1\" />");
+   else if(L->getDimLevel()==2)
+      cl.println("value=\"2\" />");
+   else 
+      cl.println("value=\"3\" />");
+      
+   cl.println("<p id=\"lightStatus\">Current status is"); //Brightness
+   if(L->getState()==ON)
+   {
+      cl.println("on at brightness ");
+      if(L->getDimLevel()==1)
+         cl.println("1</p>");
+      else if(L->getDimLevel()==2)
+         cl.println("2</p>");
+      else
+         cl.println("3</p>");
+   }
+   else
+      cl.println("off</p>");
+      
+   cl.println("<p id=\"ldrReading\">LDR reading is");
+   cl.println(LIGHT_INTENSITY); 
+   cl.println("</p>");
+   cl.println("<p id=\"lightRecommended\">Recommended:"); //Light Recommended
+   lightRecommend(cl);
+   
+   cl.println("<input type=\"submit\" />");
+   //Fan
+   //AC
+   cl.println("<input type=\"button\" id=\"refreshButton\" value=\"Refresh\" onclick=\"window.location.reload()\" />");
+   cl.println("<input type=\"button\" id=\"autoButton\" value=\"Auto mode\" />");
+   cl.println("<input type=\"button\" id=\"backButton\" value=\"Back\" onclick=\"window.location='/'\"/>");
+   cl.println("</form>");
+   cl.println("</body>");
+   cl.println("</html>");
+}
+
+void sendStatusPage(EthernetClient cl)
+{
+   cl.println("<!DOCTYPE html>");
+   cl.println("<html>");
+   cl.println("<head>");
+   cl.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />");
+   cl.println("<title>Status</title>");
+   cl.println("</head>");
+   cl.println("<body>");
+   cl.println("<h1>Currently in auto mode. Go to manual mode to set to manual mode. Go to auto mode to set to auto mode and/or change auto mode settings."); //Change Uncomment
+   cl.println("<h2>Lights</h2>");
+   cl.println("<br />");
+   
+   cl.println("<p id=\"lightStatus\">Current status is"); //Brightness
+   if(L->getState()==ON)
+   {
+      cl.println("on at brightness ");
+      if(L->getDimLevel()==1)
+         cl.println("1</p>");
+      else if(L->getDimLevel()==2)
+         cl.println("2</p>");
+      else
+         cl.println("3</p>");
+   }
+   else
+      cl.println("off</p>");
+
+   cl.println("<p id=\"ldrReading\">LDR reading is");
+   cl.println(LIGHT_INTENSITY); 
+   cl.println("</p>");
+   cl.println("<p id=\"lightRecommended\">Recommended:"); //Light Recommended
+   lightRecommend(cl);
+   
+   cl.println("<input type=\"button\" id=\"refreshButton\" value=\"Refresh\" onclick=\"window.location.reload()\" />");
+   cl.println("<input type=\"button\" id=\"manualButton\" value=\"Manual mode\" onclick=\"window.location='/manual.html'\"/>");
+   cl.println("<input type=\"button\" id=\"autoButton\" value=\"Auto mode\" />");
+   cl.println("</body>");
+   cl.println("</html>");
+}
