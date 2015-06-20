@@ -26,7 +26,7 @@ class AirConditioner
    IRsend irsend;
    byte ACpin;
   public:
-	AirConditioner(int markl,int space0,int space1, int hmark, int hspace, int gap, byte freq,unsigned long*** D,unsigned long offD[],byte tlevels,intfspeeds,byte pin):MARK_LENGTH(markl),SPACE0(space0),SPACE1(space1),HMARK(hmark),HSPACE(hspace),GAP(gap),FREQUENCY(freq);
+	AirConditioner(int markl,int space0,int space1, int hmark, int hspace, int gap, byte freq,unsigned long*** D,unsigned long offD[],byte tlevels,intfspeeds,byte pin);
  	void sendData(unsigned long data0,unsigned long data1);
 	void off();
 	void set(byte temperature,byte fspeed);
