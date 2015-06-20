@@ -45,20 +45,13 @@ byte DEFAULT_AC_FAN_SPEED=1;
 const byte T5=24,T4=20,T3=16,T2=14,T1=12;
 const int LIGHT_THRESHOLD=600;
 const int L1=500,L2=400,L3=300;
-<<<<<<< HEAD
 const byte RH_THRESHOLD=55;
-=======
 
->>>>>>> 25c6b6e90bf05cb3db00a0e72819f247ba98b0ee
 //Appliances
 byte* fanRegulatePins=new byte[3];  //For readability
-fanRegulatePins[0]=27;  //Initialize pins
-fanRegulatePins[1]=28;
-fanRegulatePins[2]=29;   
+  
 byte* lightRegulatePins=new byte[3];
-lightRegulatePins[0]=23;
-lightRegulatePins[1]=24;
-lightRegulatePins[2]=25;
+
 Light* L;
 Fan* F1;
 
@@ -68,6 +61,12 @@ void setup()
    //start the system
    //initialize devices
    //while uploading sync time to PC
+   fanRegulatePins[0]=27;  //Initialize pins
+fanRegulatePins[1]=28;
+fanRegulatePins[2]=29; 
+lightRegulatePins[0]=23;
+lightRegulatePins[1]=24;
+lightRegulatePins[2]=25;
    unsigned long*** data=new unsigned long**[2];
 for(int j=0;j<2;j++)
 {
@@ -86,7 +85,7 @@ data[1][1][0]=0xB24D5F;
 data[1][1][1]=0xA0C03F;
 data[1][2][0]=0xB24D3F;
 data[1][2][1]=0xC0C03F;
-unsigned long* offData=new usnigned long[2];
+unsigned long* offData=new unsigned long[2];
 offData[0]=0xB24D7B;
 offData[1]=0x84E01F;
 F1=new Fan(26,fanRegulatePins,3);
@@ -110,8 +109,6 @@ void loop()
       {
         F1->off();
       }
-<<<<<<< HEAD
-      if(AC_STATE!=ON)AC1->on(); //Change once header is done
       AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
     }
     else if(TEMPERATURE<AC_CUTOFF)
@@ -119,19 +116,15 @@ void loop()
       AC1->off();
       if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)
       F1->regulate(5);
-=======
-      if(AC_STATE!=ON)
-         acON(); //Change once header is done
-      setAC(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
+      AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
     }
     else if(TEMPERATURE<AC_CUTOFF)
     {
-      acOFF();
+      AC1->off();
       if(TEMPERATURE>T1)
          F1->on();
       if(TEMPERATURE>T5)   //Humidity instead of temperature seems like a better option
          F1->regulate(5);
->>>>>>> 25c6b6e90bf05cb3db00a0e72819f247ba98b0ee
       else if(TEMPERATURE>T4)
          F1->regulate(4);
       else if(TEMPERATURE>T3)
@@ -279,6 +272,7 @@ void loop()
       // close the connection:
       client.stop();
    }
+  }
 }
 
 void readSensorData()
