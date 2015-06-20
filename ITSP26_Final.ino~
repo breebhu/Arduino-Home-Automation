@@ -45,11 +45,7 @@ byte DEFAULT_AC_FAN_SPEED=1;
 const byte T5=24,T4=20,T3=16,T2=14,T1=12; //Needs to be set high for final demo since heating the sensor is easier than cooling 
 const int LIGHT_THRESHOLD=600;
 const int L1=500,L2=400,L3=300;
-<<<<<<< HEAD
-const byte RH_THRESHOLD=55;
-=======
 const byte RH_THRESHOLD=80;
->>>>>>> 534bf1967ad2599ca454c0bc849da58d6cda3d5c
 
 //Appliances
 byte* fanRegulatePins=new byte[3];  //For readability
@@ -139,43 +135,15 @@ void loop()
       {
         F1->off();
       }
-<<<<<<< HEAD
       AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
-=======
-      AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); //No on function (no need of it too)
->>>>>>> 534bf1967ad2599ca454c0bc849da58d6cda3d5c
+
     }
     else if(TEMPERATURE<AC_CUTOFF)
     {
-      AC1->off();
-<<<<<<< HEAD
-      if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)
-      F1->regulate(5);
-      AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
-    }
-    else if(TEMPERATURE<AC_CUTOFF)
-    {
-      AC1->off();
-=======
->>>>>>> 534bf1967ad2599ca454c0bc849da58d6cda3d5c
-      if(TEMPERATURE>T1)
-      {
-         F1->on();
-<<<<<<< HEAD
-      if(TEMPERATURE>T5)   //Humidity instead of temperature seems like a better option
-         F1->regulate(5);
-      else if(TEMPERATURE>T4)
-         F1->regulate(4);
-      else if(TEMPERATURE>T3)
-         F1->regulate(3);
-      else if(TEMPERATURE>T2)
-         F1->regulate(2);
-      else if(TEMPERATURE>T1)
-         F1->regulate(1);
-      else 
-         F1->off();
-      
-=======
+        AC1->off();
+	if(TEMPERATURE>T1)
+	{
+	F1->on();
          if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)  
             F1->regulate(5);
          else if(TEMPERATURE>T4)
@@ -185,11 +153,11 @@ void loop()
          else if(TEMPERATURE>T2)
             F1->regulate(2);
          else if(TEMPERATURE>T1)
-            F1->regulate(1);
+            F1->regulate(1);	
+	}
          else 
             F1->off();
       }
->>>>>>> 534bf1967ad2599ca454c0bc849da58d6cda3d5c
     }
 
     if(LIGHT_INTENSITY<LIGHT_THRESHOLD)   //dim(1) means highly dim, dim(3) is very bright
