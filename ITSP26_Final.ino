@@ -57,7 +57,19 @@ lightRegulatePins[1]=24;
 lightRegulatePins[2]=25;
 Light* L;
 Fan* F1;
-unsigned long*** data=new unsigned long[2][3][2];// data for 24 and 25 C for TL AC
+
+AirConditioner* AC1;
+void setup()
+{
+   //start the system
+   //initialize devices
+   //while uploading sync time to PC
+   unsigned long*** data=new unsigned long**[2];
+for(int j=0;j<2;j++)
+{
+  data[j]=new unsigned long*[3];
+  for(int k=0;k<3;k++)data[j][k]=new unsigned long[2];
+} // data for 24 and 25 C for TL AC
 data[0][1][0]=0xB24D5F;
 data[0][1][1]=0xA040BF;
 data[0][0][0]=0xB24D9F;
@@ -73,12 +85,6 @@ data[1][2][1]=0xC0C03F;
 unsigned long* offData=new usnigned long[2];
 offData[0]=0xB24D7B;
 offData[1]=0x84E01F;
-AirConditioner* AC1;
-void setup()
-{
-   //start the system
-   //initialize devices
-   //while uploading sync time to PC
 F1=new Fan(26,fanRegulatePins,3);
 L=new Light(22,lightRegulatePins,3);   
 AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
