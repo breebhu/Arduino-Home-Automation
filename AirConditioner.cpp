@@ -21,7 +21,13 @@ void AirConditioner::set(byte temperature, byte fspeed)
 }
 void AirConditioner::sendData(unsigned long data0,unsigned long data01)
 {
+<<<<<<< HEAD
   irsend.enableIROut(frequency);
+=======
+  unsigned long data02=data0;
+  unsigned long data03=data01;
+  irsend.enableIROut(FREQUENCY);
+>>>>>>> 534bf1967ad2599ca454c0bc849da58d6cda3d5c
   irsend.mark(HMARK);
   irsend.space(HSPACE);
   for (int i = 0; i < 24; i++) {
@@ -45,6 +51,34 @@ void AirConditioner::sendData(unsigned long data0,unsigned long data01)
       irsend.space(SPACE0);  
     }
     data01 <<= 1;
+  }
+  irsend.mark(MARK_LENGTH);
+  
+  irsend.space(GAP);
+  
+  irsend.mark(HMARK);
+  irsend.space(HSPACE);
+  for (int i = 0; i < 24; i++) {
+    if (data02 & TOPBIT) {
+      irsend.mark(MARK_LENGTH);  
+      irsend.space(SPACE1);  
+    } 
+    else {
+      irsend.mark(MARK_LENGTH);
+      irsend.space(SPACE0);  
+    }
+    data02 <<= 1;
+  }
+  for (int i = 0; i < 24; i++) {
+    if (data03 & TOPBIT) {
+      irsend.mark(MARK_LENGTH);  
+      irsend.space(SPACE1);  
+    } 
+    else {
+      irsend.mark(MARK_LENGTH);
+      irsend.space(SPACE0);  
+    }
+    data03 <<= 1;
   }
   irsend.mark(MARK_LENGTH);
   irsend.space(0);
