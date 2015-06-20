@@ -92,7 +92,6 @@ offData[1]=0x84E01F;
 F1=new Fan(26,fanRegulatePins,3);
 L=new Light(22,lightRegulatePins,3);  
 AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
-=======
    for(int j=0;j<2;j++)
    {
      data[j]=new unsigned long*[3];
@@ -116,7 +115,6 @@ AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
    F1=new Fan(26,fanRegulatePins,3);
    L=new Light(22,lightRegulatePins,3);  
    AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
->>>>>>> 534bf1967ad2599ca454c0bc849da58d6cda3d5c
    // start the Ethernet connection and the server:
    Ethernet.begin(mac, ip);
    server.begin();
