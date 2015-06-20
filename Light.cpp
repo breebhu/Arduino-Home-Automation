@@ -1,12 +1,16 @@
 #include "Light.h"
+//#include <Arduino.h>
 Light::Light(byte mpin,byte* pins,byte numLevel)
 {
-	Light::mainPin=mpin;
+	mainPin=mpin;
         dimPins=pins;
 	levels=numLevel;
 	Light::off();
         LIGHT_STATE=(byte)STATE_OFF;
         DIM_LEVEL=0;
+        pinMode(mainPin,OUTPUT);
+        for(int i=0;i<numLevel;i++)
+        	pinMode(dimPins[i],OUTPUT);
 }
 
 Light::~Light()
