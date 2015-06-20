@@ -42,14 +42,11 @@ byte FAN_CUTOFF=28;
 byte AC_CUTOFF=24;
 byte AC_AMBIENT_TEMP=22;
 byte DEFAULT_AC_FAN_SPEED=1;
-const byte T5=24,T4=20,T3=16,T2=14,T1=12;
+const byte T5=24,T4=20,T3=16,T2=14,T1=12; //Needs to be set high for final demo since heating the sensor is easier than cooling 
 const int LIGHT_THRESHOLD=600;
 const int L1=500,L2=400,L3=300;
-<<<<<<< HEAD
-const byte RH_THRESHOLD=55;
-=======
+const byte RH_THRESHOLD=80;
 
->>>>>>> 25c6b6e90bf05cb3db00a0e72819f247ba98b0ee
 //Appliances
 byte* fanRegulatePins=new byte[3];  //For readability
 fanRegulatePins[0]=27;  //Initialize pins
@@ -69,29 +66,29 @@ void setup()
    //initialize devices
    //while uploading sync time to PC
    unsigned long*** data=new unsigned long**[2];
-for(int j=0;j<2;j++)
-{
-  data[j]=new unsigned long*[3];
-  for(int k=0;k<3;k++)data[j][k]=new unsigned long[2];
-} // data for 24 and 25 C for TL AC
-data[0][1][0]=0xB24D5F;
-data[0][1][1]=0xA040BF;
-data[0][0][0]=0xB24D9F;
-data[0][0][1]=0x6040BF;
-data[0][2][0]=0xB24D3F;
-data[0][2][1]=0xC040BF;
-data[1][0][0]=0xB24D9F;
-data[1][0][1]=0x60C03F;
-data[1][1][0]=0xB24D5F;
-data[1][1][1]=0xA0C03F;
-data[1][2][0]=0xB24D3F;
-data[1][2][1]=0xC0C03F;
-unsigned long* offData=new usnigned long[2];
-offData[0]=0xB24D7B;
-offData[1]=0x84E01F;
-F1=new Fan(26,fanRegulatePins,3);
-L=new Light(22,lightRegulatePins,3);  
-AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
+   for(int j=0;j<2;j++)
+   {
+     data[j]=new unsigned long*[3];
+     for(int k=0;k<3;k++)data[j][k]=new unsigned long[2];
+   } // data for 24 and 25 C for TL AC
+   data[0][1][0]=0xB24D5F;
+   data[0][1][1]=0xA040BF;
+   data[0][0][0]=0xB24D9F;
+   data[0][0][1]=0x6040BF;
+   data[0][2][0]=0xB24D3F;
+   data[0][2][1]=0xC040BF;
+   data[1][0][0]=0xB24D9F;
+   data[1][0][1]=0x60C03F;
+   data[1][1][0]=0xB24D5F;
+   data[1][1][1]=0xA0C03F;
+   data[1][2][0]=0xB24D3F;
+   data[1][2][1]=0xC0C03F;
+   unsigned long* offData=new unsigned long[2];
+   offData[0]=0xB24D7B;
+   offData[1]=0x84E01F;
+   F1=new Fan(26,fanRegulatePins,3);
+   L=new Light(22,lightRegulatePins,3);  
+   AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
    // start the Ethernet connection and the server:
    Ethernet.begin(mac, ip);
    server.begin();
@@ -110,39 +107,27 @@ void loop()
       {
         F1->off();
       }
-<<<<<<< HEAD
-      if(AC_STATE!=ON)AC1->on(); //Change once header is done
-      AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
+      AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); //No on function (no need of it too)
     }
     else if(TEMPERATURE<AC_CUTOFF)
     {
       AC1->off();
-      if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)
-      F1->regulate(5);
-=======
-      if(AC_STATE!=ON)
-         acON(); //Change once header is done
-      setAC(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
-    }
-    else if(TEMPERATURE<AC_CUTOFF)
-    {
-      acOFF();
       if(TEMPERATURE>T1)
+      {
          F1->on();
-      if(TEMPERATURE>T5)   //Humidity instead of temperature seems like a better option
-         F1->regulate(5);
->>>>>>> 25c6b6e90bf05cb3db00a0e72819f247ba98b0ee
-      else if(TEMPERATURE>T4)
-         F1->regulate(4);
-      else if(TEMPERATURE>T3)
-         F1->regulate(3);
-      else if(TEMPERATURE>T2)
-         F1->regulate(2);
-      else if(TEMPERATURE>T1)
-         F1->regulate(1);
-      else 
-         F1->off();
-      
+         if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)  
+            F1->regulate(5);
+         else if(TEMPERATURE>T4)
+            F1->regulate(4);
+         else if(TEMPERATURE>T3)
+            F1->regulate(3);
+         else if(TEMPERATURE>T2)
+            F1->regulate(2);
+         else if(TEMPERATURE>T1)
+            F1->regulate(1);
+         else 
+            F1->off();
+      }
     }
 
     if(LIGHT_INTENSITY<LIGHT_THRESHOLD)   //dim(1) means highly dim, dim(3) is very bright
@@ -251,7 +236,21 @@ void loop()
                      else 
                         F1->regulate(3);
                      
-                     //Set others
+                     for(int i=0;i<5;i++)value[i]=' '; //Char array/String
+                     
+                     //Set AC
+                     value[0]=page[76];
+                     if(value[0]=='0') //Char array/String
+                        AC1->off();
+                     else
+                     {
+                        value[1]=page[92];   //Temperature
+                        value[2]=page[93];   //Temperature
+                        value[3]=page[103];
+                        byte reqTemp=((byte)value[1]-48)*10 + ((byte)value[2]-48);
+                        byte reqSpeed=(byte)value[3]-48;
+                        AC1->set(reqTemp,reqSpeed);
+                     }
                   }
                   MODE=MANUAL_MODE;
                   // send a standard http response header
@@ -312,7 +311,7 @@ void fanRecommend(EthernetClient cl)
       if(TEMPERATURE>T1)
       {
          cl.println("On at speed ");
-         if(TEMPERATURE>T5)   //Humidity instead of temperature seems like a better option
+         if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)   
             cl.println("5</p>");
          else if(TEMPERATURE>T4)
             cl.println("4</p>");
@@ -326,6 +325,21 @@ void fanRecommend(EthernetClient cl)
       else 
          cl.println("Off</p>");
    }
+}
+
+void ACRecommend(EthernetClient cl)
+{
+   if(TEMPERATURE>FAN_CUTOFF)
+    {
+       cl.println("On at temperature ");
+       cl.println(AC_AMBIENT_TEMP);
+       cl.println(" and fan speed ");
+       cl.println(DEFAULT_AC_FAN_SPEED);
+       cl.println("</p>");
+    }
+    
+    else
+      cl.println("Off</p>");
 }
 
 void sendManualPage(EthernetClient cl)
@@ -437,6 +451,57 @@ void sendManualPage(EthernetClient cl)
    cl.println("<input type=\"submit\" />");
    
    //AC
+   cl.println("<br /><br />");
+   cl.println("<h1>AC</h1>");
+   
+   if(AC1->getState==ON)
+   {
+      cl.println("<input type=\"radio\" id=\"ACOnButton\" name=\"ACButton\" value=\"1\" checked=\"checked\"/>On");
+      cl.println("<input type=\"radio\" id=\"ACOffButton\" name=\"ACButton\" value=\"0\" />Off");
+   }
+   else
+   {
+      cl.println("<input type=\"radio\" id=\"ACOnButton\" name=\"ACButton\" value=\"1\" />On");
+      cl.println("<input type=\"radio\" id=\"ACOffButton\" name=\"ACButton\" value=\"0\" checked=\"checked\"/>Off");
+   }
+   cl.println("<br />");
+   
+   cl.println("Temperature:<input type=\"number\" id=\"ACTemperature\" name=\"ACTemperature\" min=\"18\" max=\"30\" value=\""); 
+   cl.println(AC1->getTemp());
+   cl.println("\" />");
+   cl.println("<br />");
+   
+   cl.println("Fan speed:<input type=\"number\" id=\"ACSpeed\" name=\"ACSpeed\" min=\"1\" max=\"3\" value=\"");
+   cl.println(AC1->getFanSpeed());
+   cl.println("\" />");
+   
+   cl.println("<p id=\"ACStatus\">Current status is ");
+   if(AC1->getState==ON)
+   {
+      cl.println("on at temperature ");
+      cl.println(AC1->getTemp);
+      cl.println(" and fan speed ");
+      cl.println(AC1->getFanSpeed());
+      cl.println("</p>");
+   }
+   else 
+      cl.println("off</p>");
+      
+   cl.println("<p id=\"temperatureReading\">Temperature is ");
+   cl.println(TEMPERATURE);
+   cl.println("°C</p>");
+   
+   cl.println("<p id=\"humidityReading\">Humidity is ");
+   cl.println(HUMIDITY);
+   cl.println("%</p>");
+   
+   cl.println("<p id=\"ACRecommended\">Recommended:");
+   ACRecommend(cl);
+   
+   cl.println("<input type=\"submit\" />");
+
+   cl.println("<br /><br />");
+
    cl.println("<input type=\"button\" id=\"refreshButton\" value=\"Refresh\" onclick=\"window.location.reload()\" />");
    cl.println("<input type=\"button\" id=\"autoButton\" value=\"Auto mode\" />");
    cl.println("<input type=\"button\" id=\"backButton\" value=\"Back\" onclick=\"window.location='/'\"/>");
@@ -509,6 +574,34 @@ void sendStatusPage(EthernetClient cl)
    
    cl.println("<p id=\"fanRecommended\">Recommended:");
    fanRecommend(cl);
+   
+   //AC
+   cl.println("<br /><br />");
+   cl.println("<h1>AC</h1>");
+   cl.println("<br/>");
+   
+   cl.println("<p id=\"ACStatus\">Current status is ");
+   if(AC1->getState==ON)
+   {
+      cl.println("on at temperature ");
+      cl.println(AC1->getTemp);
+      cl.println(" and fan speed ");
+      cl.println(AC1->getFanSpeed());
+      cl.println("</p>");
+   }
+   else 
+      cl.println("off</p>");
+      
+   cl.println("<p id=\"temperatureReading\">Temperature is ");
+   cl.println(TEMPERATURE);
+   cl.println("°C</p>");
+   
+   cl.println("<p id=\"humidityReading\">Humidity is ");
+   cl.println(HUMIDITY);
+   cl.println("%</p>");
+   
+   cl.println("<p id=\"ACRecommended\">Recommended:");
+   ACRecommend(cl);
    
    cl.println("<input type=\"button\" id=\"refreshButton\" value=\"Refresh\" onclick=\"window.location.reload()\" />");
    cl.println("<input type=\"button\" id=\"manualButton\" value=\"Manual mode\" onclick=\"window.location='/manual.html'\"/>");
