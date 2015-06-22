@@ -220,7 +220,7 @@ void loop()
 	       if(AC1->getState()==ON)AC1->off();
 	       if(TEMPERATURE>T1)
 	       {
-	          if(F1->getState()!=ON)F1->on();
+	          if(F1->getState!=ON)F1->on();
               	  if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)  
 		  F1->regulate(5);
 		  else if(TEMPERATURE>T4)
