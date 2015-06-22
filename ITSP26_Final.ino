@@ -23,12 +23,9 @@ const byte ON=1;
 const byte OFF=0;
 
 //Modes
-const byte AUTO_MODE=31;   //31?
-const byte MANUAL_MODE=27; //27?
+const byte AUTO_MODE=31;   
+const byte MANUAL_MODE=27; 
 byte MODE=AUTO_MODE;
-
-
-byte AC_STATE=OFF;
 
 //Sensors
 byte NUM_PERSONS=0;
@@ -150,11 +147,18 @@ void loop()
     }
     
   }
-  else
-  {
-    //in manual mode, read data from user webpage and modify things accordingly
-    
-      // listen for incoming clients
+  
+  handleWebRequest();
+}
+
+void readSensorData()
+{
+  
+}
+
+void handleWebRequest()
+{
+	// listen for incoming clients
       EthernetClient client = server.available();
       for(int i=0;i<110;i++)page[i]=' '; //Char array/string
       if (client) {
@@ -282,12 +286,6 @@ void loop()
       // close the connection:
       client.stop();
    }
-  }
-}
-
-void readSensorData()
-{
-  
 }
 
 void lightRecommend(EthernetClient cl)
