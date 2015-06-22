@@ -7,12 +7,12 @@ Light::Light(byte mpin,byte* pins,byte numLevel)
 	levels=numLevel;
 	Light::off();
         LIGHT_STATE=(byte)STATE_OFF;
-        DIM_LEVEL=0;
+        BRIGHT_LEVEL=0;
         pinMode(mainPin,OUTPUT);
         for(int i=0;i<numLevel;i++)
         	pinMode(dimPins[i],OUTPUT);
 }
-Light::Light()(byte* pins,byte numLevel)
+Light::Light(byte* pins,byte numLevel)
 {
 	mainPin=pins[numLevel-1];
         dimPins=pins;
@@ -65,6 +65,6 @@ void Light::dim(byte level)
           else digitalWrite(dimPins[j],LOW);
    	}
    BRIGHT_LEVEL=level;
-   LIGHT_STATE=ON;
+   LIGHT_STATE=STATE_ON;
    }
 }

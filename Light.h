@@ -16,7 +16,7 @@ public:
    Light(byte* pins,byte numLevel);
    ~Light();
    byte getState();
-   byte getDimLevel();
+   byte getBrightLevel();
    byte on();
    byte off();
    void dim(byte level);	
