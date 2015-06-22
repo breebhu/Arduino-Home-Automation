@@ -492,9 +492,9 @@ void sendManualPage(EthernetClient cl)
    cl.println("Brightness:<input type=\"number\" id=\"lightBrightness\" name=\"lightBrightness\" min=\"0\" max=\"3\" "); //Brightness
    if(L->getState()==OFF)
       cl.println("value=\"0\" />");
-   else if(L->getDimLevel()==1)
+   else if(L->getBrightLevel()==1)
       cl.println("value=\"1\" />");
-   else if(L->getDimLevel()==2)
+   else if(L->getBrightLevel()==2)
       cl.println("value=\"2\" />");
    else 
       cl.println("value=\"3\" />");
@@ -503,9 +503,9 @@ void sendManualPage(EthernetClient cl)
    if(L->getState()==ON)
    {
       cl.println("on at brightness ");
-      if(L->getDimLevel()==1)
+      if(L->getBrightLevel()==1)
          cl.println("1</p>");
-      else if(L->getDimLevel()==2)
+      else if(L->getBrightLevel()==2)
          cl.println("2</p>");
       else
          cl.println("3</p>");
@@ -651,9 +651,9 @@ void sendStatusPage(EthernetClient cl)
    if(L->getState()==ON)
    {
       cl.println("on at brightness ");
-      if(L->getDimLevel()==1)
+      if(L->getBrightLevel()==1)
          cl.println("1</p>");
-      else if(L->getDimLevel()==2)
+      else if(L->getBrightLevel()==2)
          cl.println("2</p>");
       else
          cl.println("3</p>");
