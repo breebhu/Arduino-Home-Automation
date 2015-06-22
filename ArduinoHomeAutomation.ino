@@ -682,11 +682,27 @@ void detectLaser1()
     }
     if(count>4)
     {
-      count=4;
-      for(int i=0;i<4;i++)
+      boolean flag1=true;
+      for(int i=0;i<4&&flag1;i++)
       {
-        laser[0][i]=laser[0][i+1];
-        laser[1][i]=laser[1][i+1];
+        for(int j=i+1;j<6&&flag1;j++)
+        {
+          if(laser[0][i]==laser[0][j]&&laser[1][i]==laser[1][j])
+          {
+            count=i+1;
+            flag1=false;
+          }
+        }
+        
+      }
+      if(flag1)
+      {
+        count=4;
+        for(int i=0;i<4;i++)
+        {
+          laser[0][i]=laser[0][i+1];
+          laser[1][i]=laser[1][i+1];
+        }
       }
     }
   }
@@ -725,11 +741,27 @@ void detectLaser2()
     }
     if(count>4)
     {
-      count=4;
-      for(int i=0;i<4;i++)
+      boolean flag1=true;
+      for(int i=0;i<4&&flag1;i++)
       {
-        laser[0][i]=laser[0][i+1];
-        laser[1][i]=laser[1][i+1];
+        for(int j=i+1;j<6&&flag1;j++)
+        {
+          if(laser[0][i]==laser[0][j]&&laser[1][i]==laser[1][j])
+          {
+            count=i+1;
+            flag1=false;
+          }
+        }
+        
+      }
+      if(flag1)
+      {
+        count=4;
+        for(int i=0;i<4;i++)
+        {
+          laser[0][i]=laser[0][i+1];
+          laser[1][i]=laser[1][i+1];
+        }
       }
     }
   }
