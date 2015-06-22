@@ -25,7 +25,7 @@ const byte OFF=0;
 //Modes
 const byte AUTO_MODE=31;   
 const byte MANUAL_MODE=27; 
-byte MODE=AUTO_MODE;
+volatile byte MODE=AUTO_MODE;
 
 //Sensors
 volatile byte NUM_PERSONS=0;
@@ -51,7 +51,6 @@ const byte laserPin1=2, laserPin2=3;
 //pushButton pins
 const byte pushButtonFan=21;
 const byte pushButtonLight=20;
-const byte pushButtonAC=18;
 
 //create instances of devices
 Light* L;
@@ -100,9 +99,11 @@ offData[1]=0x84E01F;
 F1=new Fan(26,fanRegulatePins,3);
 L=new Light(22,lightRegulatePins,3);  
 AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
-   // start the Ethernet connection and the server:
-   Ethernet.begin(mac, ip);
-   server.begin();
+// start the Ethernet connection and the server:
+Ethernet.begin(mac, ip);
+server.begin();
+attachInterrupt(2,switchFan,CHANGE);
+attachInterrupt(3,switchLight,CHANGE);
 }
 void loop()
 {
@@ -733,5 +734,17 @@ void detectLaser2()
       }
     }
   }
+}
+void switchFan()
+{
+  if(MODE==AUTO_MODE)MODE=MANUAL_MODE;
+  if(F1->getState()==1)F1->off();
+  else F1->on();
+}
+void switchLight()
+{
+  if(MODE==AUTO_MODE)MODE=MANUAL_MODE;
+  if(L->getState()==1)L->off();
+  else L->on();
 }
 
