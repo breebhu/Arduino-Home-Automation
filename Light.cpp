@@ -43,10 +43,10 @@ byte Light::getDimLevel()
 
 void Light::dim(byte level)
 {
-   for(int j=0;j<levels;j++)
+   for(int j=1;j<=levels;j++)
    {
-	if(j==level-1)digitalWrite(dimPins[j],HIGH);
-	else digitalWrite(dimPins[j],LOW);
+	if(j==level)digitalWrite(dimPins[j-1],HIGH);
+	else digitalWrite(dimPins[j-1],LOW);
    }
    DIM_LEVEL=level;
 }
