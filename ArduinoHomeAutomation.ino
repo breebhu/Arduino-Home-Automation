@@ -1,7 +1,6 @@
 #include <Light.h>
 #include <AirConditioner.h>
 #include <Fan.h>
-
 #include <SPI.h>
 #include <Ethernet.h>
 // Enter a MAC address and IP address for your controller below.
@@ -66,44 +65,118 @@ volatile byte prevState[2];
 
 void setup()
 {
-   //start the system
-   //initialize devices
-   //while uploading sync time to PC
-   fanRegulatePins[0]=27;  //Initialize pins
-fanRegulatePins[1]=28;
-fanRegulatePins[2]=29; 
-lightRegulatePins[0]=23;
-lightRegulatePins[1]=24;
-lightRegulatePins[2]=25;
-   unsigned long*** data=new unsigned long**[2];
-for(int j=0;j<2;j++)
-{
-  data[j]=new unsigned long*[3];
-  for(int k=0;k<3;k++)data[j][k]=new unsigned long[2];
-} // data for 24 and 25 C for TL AC
-data[0][1][0]=0xB24D5F;
-data[0][1][1]=0xA040BF;
-data[0][0][0]=0xB24D9F;
-data[0][0][1]=0x6040BF;
-data[0][2][0]=0xB24D3F;
-data[0][2][1]=0xC040BF;
-data[1][0][0]=0xB24D9F;
-data[1][0][1]=0x60C03F;
-data[1][1][0]=0xB24D5F;
-data[1][1][1]=0xA0C03F;
-data[1][2][0]=0xB24D3F;
-data[1][2][1]=0xC0C03F;
-unsigned long* offData=new unsigned long[2];
-offData[0]=0xB24D7B;
-offData[1]=0x84E01F;
-F1=new Fan(26,fanRegulatePins,3);
-L=new Light(22,lightRegulatePins,3);  
-AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
-// start the Ethernet connection and the server:
-Ethernet.begin(mac, ip);
-server.begin();
-attachInterrupt(2,switchFan,CHANGE);
-attachInterrupt(3,switchLight,CHANGE);
+  //start the system
+  //initialize devices
+  //while uploading sync time to PC
+  fanRegulatePins[0]=27;  //Initialize pins
+  fanRegulatePins[1]=28;
+  fanRegulatePins[2]=29; 
+  lightRegulatePins[0]=23;
+  lightRegulatePins[1]=24;
+  lightRegulatePins[2]=25;
+   unsigned long*** data=new unsigned long**[14];
+  for(int j=0;j<2;j++)
+  {
+    data[j]=new unsigned long*[3];
+    for(int k=0;k<3;k++)data[j][k]=new unsigned long[2];
+  } 
+  // data for TL AC
+  data[0][0][0]=0xB24D9F;
+  data[0][0][1]=0x6000FF;
+  data[0][1][0]=0xB24D5F;
+  data[0][1][1]=0xA000FF;
+  data[0][2][0]=0xB24D3F;
+  data[0][2][1]=0xC000FF;
+  data[1][0][0]=0xB24D9F;
+  data[1][0][1]=0x6010EF;
+  data[1][1][0]=0xB24D5F;
+  data[1][1][1]=0xA010EF;
+  data[1][2][0]=0xB24D3F;
+  data[1][2][1]=0xC010EF;
+  data[2][0][0]=0xB24D9F;
+  data[2][0][1]=0x6030CF;
+  data[2][1][0]=0xB24D5F;
+  data[2][1][1]=0xA030CF;
+  data[2][2][0]=0xB24D3F;
+  data[2][2][1]=0xC030CF;
+  data[3][0][0]=0xB24D9F;
+  data[3][0][1]=0x6020DF;
+  data[3][1][0]=0xB24D5F;
+  data[3][1][1]=0xA020DF;
+  data[3][2][0]=0xB24D3F;
+  data[3][2][1]=0xC020DF;
+  data[4][0][0]=0xB24D9F;
+  data[4][0][1]=0x60609F;
+  data[4][1][0]=0xB24D5F;
+  data[4][1][1]=0xA0609F;
+  data[4][2][0]=0xB24D3F;
+  data[4][2][1]=0xC0609F;
+  data[5][0][0]=0xB24D9F;
+  data[5][0][1]=0x60708F;
+  data[5][1][0]=0xB24D5F;
+  data[5][1][1]=0xA0708F;
+  data[5][2][0]=0xB24D3F;
+  data[5][2][1]=0xC0708F;
+  data[6][0][0]=0xB24D9F;
+  data[6][0][1]=0x6050AF;
+  data[6][1][0]=0xB24D5F;
+  data[6][1][1]=0xA050AF;
+  data[6][2][0]=0xB24D3F;
+  data[6][2][1]=0xC050AF;
+  data[7][0][0]=0xB24D9F;
+  data[7][0][1]=0x6040BF;
+  data[7][1][0]=0xB24D5F;
+  data[7][1][1]=0xA040BF;
+  data[7][2][0]=0xB24D3F;
+  data[7][2][1]=0xC040BF;
+  data[8][0][0]=0xB24D9F;
+  data[8][0][1]=0x60C03F;
+  data[8][1][0]=0xB24D5F;
+  data[8][1][1]=0xA0C03F;
+  data[8][2][0]=0xB24D3F;
+  data[8][2][1]=0xC0C03F;
+  data[9][0][0]=0xB24D9F;
+  data[9][0][1]=0x60D02F;
+  data[9][1][0]=0xB24D5F;
+  data[9][1][1]=0xA0D02F;
+  data[9][2][0]=0xB24D3F;
+  data[9][2][1]=0xC0D02F;
+  data[10][0][0]=0xB24D9F;
+  data[10][0][1]=0x60906F;
+  data[10][1][0]=0xB24D5F;
+  data[10][1][1]=0xA0906F;
+  data[10][2][0]=0xB24D3F;
+  data[10][2][1]=0xC0906F;
+  data[11][0][0]=0xB24D9F;
+  data[11][0][1]=0x60807F;
+  data[11][1][0]=0xB24D5F;
+  data[11][1][1]=0xA0807F;
+  data[11][2][0]=0xB24D3F;
+  data[11][2][1]=0xC0807F;
+  data[12][0][0]=0xB24D9F;
+  data[12][0][1]=0x60A05F;
+  data[12][1][0]=0xB24D5F;
+  data[12][1][1]=0xA0A05F;
+  data[12][2][0]=0xB24D3F;
+  data[12][2][1]=0xC0A05F;
+  data[13][0][0]=0xB24D9F;
+  data[13][0][1]=0x60B04F;
+  data[13][1][0]=0xB24D5F;
+  data[13][1][1]=0xA0B04F;
+  data[13][2][0]=0xB24D3F;
+  data[13][2][1]=0xC0B04F;
+ 
+  unsigned long* offData=new unsigned long[2];
+  offData[0]=0xB24D7B;
+  offData[1]=0x84E01F;
+  F1=new Fan(26,fanRegulatePins,3);
+  L=new Light(22,lightRegulatePins,3);  
+  AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
+  // start the Ethernet connection and the server:
+  Ethernet.begin(mac, ip);
+  server.begin();
+  attachInterrupt(2,switchFan,CHANGE);
+  attachInterrupt(3,switchLight,CHANGE);
 }
 void loop()
 {
