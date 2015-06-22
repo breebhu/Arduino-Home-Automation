@@ -45,10 +45,10 @@ byte Fan::getSpeed()
 
 void Fan::regulate(byte speed)
 {
-   for(int j=0;j<levels;j++)
+   for(int j=1;j<=speed;j++)
    {
-	if(j==speed)digitalWrite(regulatePins[j],HIGH);
-	else digitalWrite(regulatePins[j],LOW);
+	if(j==speed)digitalWrite(regulatePins[j-1],HIGH);
+	else digitalWrite(regulatePins[j-1],LOW);
    }
    FAN_SPEED=speed;
 }
