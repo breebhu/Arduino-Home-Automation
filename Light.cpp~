@@ -45,7 +45,7 @@ void Light::dim(byte level)
 {
    for(int j=0;j<levels;j++)
    {
-	if(j==level-1)digitalWrite(dimPins[j],HIGH);
+	if(j==level)digitalWrite(dimPins[j],HIGH);
 	else digitalWrite(dimPins[j],LOW);
    }
    DIM_LEVEL=level;

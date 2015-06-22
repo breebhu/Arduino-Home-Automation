@@ -49,13 +49,9 @@ const byte RH_THRESHOLD=80;
 
 //Appliances
 byte* fanRegulatePins=new byte[3];  //For readability
-fanRegulatePins[0]=27;  //Initialize pins
-fanRegulatePins[1]=28;
-fanRegulatePins[2]=29;   
+  
 byte* lightRegulatePins=new byte[3];
-lightRegulatePins[0]=23;
-lightRegulatePins[1]=24;
-lightRegulatePins[2]=25;
+
 Light* L;
 Fan* F1;
 
@@ -65,30 +61,36 @@ void setup()
    //start the system
    //initialize devices
    //while uploading sync time to PC
+   fanRegulatePins[0]=27;  //Initialize pins
+fanRegulatePins[1]=28;
+fanRegulatePins[2]=29; 
+lightRegulatePins[0]=23;
+lightRegulatePins[1]=24;
+lightRegulatePins[2]=25;
    unsigned long*** data=new unsigned long**[2];
-   for(int j=0;j<2;j++)
-   {
-     data[j]=new unsigned long*[3];
-     for(int k=0;k<3;k++)data[j][k]=new unsigned long[2];
-   } // data for 24 and 25 C for TL AC
-   data[0][1][0]=0xB24D5F;
-   data[0][1][1]=0xA040BF;
-   data[0][0][0]=0xB24D9F;
-   data[0][0][1]=0x6040BF;
-   data[0][2][0]=0xB24D3F;
-   data[0][2][1]=0xC040BF;
-   data[1][0][0]=0xB24D9F;
-   data[1][0][1]=0x60C03F;
-   data[1][1][0]=0xB24D5F;
-   data[1][1][1]=0xA0C03F;
-   data[1][2][0]=0xB24D3F;
-   data[1][2][1]=0xC0C03F;
-   unsigned long* offData=new unsigned long[2];
-   offData[0]=0xB24D7B;
-   offData[1]=0x84E01F;
-   F1=new Fan(26,fanRegulatePins,3);
-   L=new Light(22,lightRegulatePins,3);  
-   AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
+for(int j=0;j<2;j++)
+{
+  data[j]=new unsigned long*[3];
+  for(int k=0;k<3;k++)data[j][k]=new unsigned long[2];
+} // data for 24 and 25 C for TL AC
+data[0][1][0]=0xB24D5F;
+data[0][1][1]=0xA040BF;
+data[0][0][0]=0xB24D9F;
+data[0][0][1]=0x6040BF;
+data[0][2][0]=0xB24D3F;
+data[0][2][1]=0xC040BF;
+data[1][0][0]=0xB24D9F;
+data[1][0][1]=0x60C03F;
+data[1][1][0]=0xB24D5F;
+data[1][1][1]=0xA0C03F;
+data[1][2][0]=0xB24D3F;
+data[1][2][1]=0xC0C03F;
+unsigned long* offData=new unsigned long[2];
+offData[0]=0xB24D7B;
+offData[1]=0x84E01F;
+F1=new Fan(26,fanRegulatePins,3);
+L=new Light(22,lightRegulatePins,3);  
+AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
    // start the Ethernet connection and the server:
    Ethernet.begin(mac, ip);
    server.begin();
@@ -107,14 +109,15 @@ void loop()
       {
         F1->off();
       }
-      AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); //No on function (no need of it too)
+      AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
+
     }
     else if(TEMPERATURE<AC_CUTOFF)
     {
-      AC1->off();
-      if(TEMPERATURE>T1)
-      {
-         F1->on();
+        AC1->off();
+	if(TEMPERATURE>T1)
+	{
+	F1->on();
          if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)  
             F1->regulate(5);
          else if(TEMPERATURE>T4)
@@ -124,11 +127,12 @@ void loop()
          else if(TEMPERATURE>T2)
             F1->regulate(2);
          else if(TEMPERATURE>T1)
-            F1->regulate(1);
+            F1->regulate(1);	
+	}
          else 
             F1->off();
       }
-    }
+   
 
     if(LIGHT_INTENSITY<LIGHT_THRESHOLD)   //dim(1) means highly dim, dim(3) is very bright
     {
@@ -278,6 +282,7 @@ void loop()
       // close the connection:
       client.stop();
    }
+  }
 }
 
 void readSensorData()
@@ -454,7 +459,7 @@ void sendManualPage(EthernetClient cl)
    cl.println("<br /><br />");
    cl.println("<h1>AC</h1>");
    
-   if(AC1->getState==ON)
+   if(AC1->getState()==ON)
    {
       cl.println("<input type=\"radio\" id=\"ACOnButton\" name=\"ACButton\" value=\"1\" checked=\"checked\"/>On");
       cl.println("<input type=\"radio\" id=\"ACOffButton\" name=\"ACButton\" value=\"0\" />Off");
@@ -476,10 +481,10 @@ void sendManualPage(EthernetClient cl)
    cl.println("\" />");
    
    cl.println("<p id=\"ACStatus\">Current status is ");
-   if(AC1->getState==ON)
+   if(AC1->getState()==ON)
    {
       cl.println("on at temperature ");
-      cl.println(AC1->getTemp);
+      cl.println((int)AC1->getTemp());
       cl.println(" and fan speed ");
       cl.println(AC1->getFanSpeed());
       cl.println("</p>");
@@ -581,10 +586,10 @@ void sendStatusPage(EthernetClient cl)
    cl.println("<br/>");
    
    cl.println("<p id=\"ACStatus\">Current status is ");
-   if(AC1->getState==ON)
+   if(AC1->getState()==ON)
    {
       cl.println("on at temperature ");
-      cl.println(AC1->getTemp);
+      cl.println((int)AC1->getTemp());
       cl.println(" and fan speed ");
       cl.println(AC1->getFanSpeed());
       cl.println("</p>");
