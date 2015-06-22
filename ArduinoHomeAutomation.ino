@@ -192,7 +192,6 @@ void readSensorData()
 {
   
 }
-
 void handleWebRequest()
 {
 	// listen for incoming clients
@@ -391,7 +390,7 @@ void sendManualPage(EthernetClient cl)
    cl.println("<title>Manual Mode</title>");
    cl.println("</head>");
    cl.println("<body>");
-   cl.println("<h1>Currently in manual mode. Go to the auto mode page to set it to auto and/or change the auto mode settings.<h1>"); //Uncomment
+   cl.println("<h1>Currently in manual mode. Go to the auto mode page to set it to auto and/or change the auto mode settings.</h1>"); 
    cl.println("<form method=\"get\">");
    
    cl.println("<h2>Light</h2>");
@@ -559,7 +558,7 @@ void sendStatusPage(EthernetClient cl)
    cl.println("<title>Status</title>");
    cl.println("</head>");
    cl.println("<body>");
-   cl.println("<h1>Currently in auto mode. Go to manual mode to set to manual mode. Go to auto mode to set to auto mode and/or change auto mode settings."); //Change Uncomment
+   cl.println("<h1>Currently in auto mode. Go to manual mode to set to manual mode. Go to auto mode to set to auto mode and/or change auto mode settings.</h1>"); 
    
    //Light
    cl.println("<h2>Light</h2>");
