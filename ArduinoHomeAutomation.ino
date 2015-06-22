@@ -25,10 +25,10 @@ const byte OFF=0;
 //Modes
 const byte AUTO_MODE=31;   
 const byte MANUAL_MODE=27; 
-byte MODE=AUTO_MODE;
+volatile byte MODE=AUTO_MODE;
 
 //Sensors
-byte NUM_PERSONS=0;
+volatile byte NUM_PERSONS=0;
 boolean NO_MOTION=false;
 int LIGHT_INTENSITY=0;
 byte TEMPERATURE=0;
@@ -44,15 +44,26 @@ const int LIGHT_THRESHOLD=600;
 const int L1=500,L2=400,L3=300;
 const byte RH_THRESHOLD=80;
 
-//Appliances
-byte* fanRegulatePins=new byte[3];  //For readability
-  
+//declare pins to be used in circuit
+byte* fanRegulatePins=new byte[3];    
 byte* lightRegulatePins=new byte[3];
+const byte laserPin1=2, laserPin2=3;
+//pushButton pins
+const byte pushButtonFan=21;
+const byte pushButtonLight=20;
 
+//create instances of devices
 Light* L;
 Fan* F1;
-
 AirConditioner* AC1;
+
+//intialze variables related to laser person count
+volatile byte laser[2][5];
+volatile boolean detected=false;
+boolean flag=true;
+volatile byte count=0;
+volatile byte prevState[2];
+
 void setup()
 {
    //start the system
@@ -88,64 +99,90 @@ offData[1]=0x84E01F;
 F1=new Fan(26,fanRegulatePins,3);
 L=new Light(22,lightRegulatePins,3);  
 AC1=new AirConditioner(600,470,1550,4400,4300,5000,38,data,offData,2,3,9,24,25);
-   // start the Ethernet connection and the server:
-   Ethernet.begin(mac, ip);
-   server.begin();
+// start the Ethernet connection and the server:
+Ethernet.begin(mac, ip);
+server.begin();
+attachInterrupt(2,switchFan,CHANGE);
+attachInterrupt(3,switchLight,CHANGE);
 }
 void loop()
 {
+  if(flag)
+  {
+    
+    if(digitalRead(laserPin1)==1&&digitalRead(laserPin2)==1)
+    {
+      laser[0][0]=1;
+      laser[1][0]=1;
+      count++;
+      prevState[0]=1; 
+      prevState[1]=1;
+      attachInterrupt(0,detectLaser1,CHANGE);
+      attachInterrupt(1,detectLaser2,CHANGE);
+      flag=false;
+    }
+  }
   //read data from sensors
     readSensorData();
   //check if auto mode or manual mode from website and update accordingly
   if(MODE==AUTO_MODE)
   {
     //check state of devices based on present data
-    if(TEMPERATURE>FAN_CUTOFF)
+    if(NUM_PERSONS>0)
     {
-      if(F1->getState()!=OFF)
-      {
-        F1->off();
-      }
-      AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
-
-    }
-    else if(TEMPERATURE<AC_CUTOFF)
-    {
-        AC1->off();
-	if(TEMPERATURE>T1)
-	{
-	F1->on();
-         if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)  
-            F1->regulate(5);
-         else if(TEMPERATURE>T4)
-            F1->regulate(4);
-         else if(TEMPERATURE>T3)
-            F1->regulate(3);
-         else if(TEMPERATURE>T2)
-            F1->regulate(2);
-         else if(TEMPERATURE>T1)
-            F1->regulate(1);	
-	}
-         else 
+        if(TEMPERATURE>FAN_CUTOFF)
+        {
+          if(F1->getState()!=OFF)
+          {
             F1->off();
-      }
-   
-
-    if(LIGHT_INTENSITY<LIGHT_THRESHOLD)   //dim(1) means highly dim, dim(3) is very bright
-    {
-      if(LIGHT_INTENSITY<L1)
-         L->dim(1);
-      else if(LIGHT_INTENSITY<L2)
-         L->dim(2);
-      else if(LIGHT_INTENSITY<L3)
-         L->dim(3);
-      L->on();
-    }
-    else
-    {
-      L->off();
-    }
+          }
+          AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
     
+        }
+        else if(TEMPERATURE<AC_CUTOFF)
+        {
+            AC1->off();
+    	if(TEMPERATURE>T1)
+    	{
+    	F1->on();
+             if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)  
+                F1->regulate(5);
+             else if(TEMPERATURE>T4)
+                F1->regulate(4);
+             else if(TEMPERATURE>T3)
+                F1->regulate(3);
+             else if(TEMPERATURE>T2)
+                F1->regulate(2);
+             else if(TEMPERATURE>T1)
+                F1->regulate(1);	
+    	}
+             else 
+                F1->off();
+          }
+       
+    
+        if(LIGHT_INTENSITY<LIGHT_THRESHOLD)   //dim(1) means highly dim, dim(3) is very bright
+        {
+          if(LIGHT_INTENSITY<L1)
+             L->dim(1);
+          else if(LIGHT_INTENSITY<L2)
+             L->dim(2);
+          else if(LIGHT_INTENSITY<L3)
+             L->dim(3);
+          L->on();
+        }
+        else
+        {
+          L->off();
+        }
+    }
+    else 
+    {
+       AC1->off();
+       F1->off();
+       L->off();
+    }    
+      
   }
   
   handleWebRequest();
@@ -155,7 +192,6 @@ void readSensorData()
 {
   
 }
-
 void handleWebRequest()
 {
 	// listen for incoming clients
@@ -354,7 +390,7 @@ void sendManualPage(EthernetClient cl)
    cl.println("<title>Manual Mode</title>");
    cl.println("</head>");
    cl.println("<body>");
-   cl.println("<h1>Currently in manual mode. Go to the auto mode page to set it to auto and/or change the auto mode settings.<h1>"); //Uncomment
+   cl.println("<h1>Currently in manual mode. Go to the auto mode page to set it to auto and/or change the auto mode settings.</h1>"); 
    cl.println("<form method=\"get\">");
    
    cl.println("<h2>Light</h2>");
@@ -522,7 +558,7 @@ void sendStatusPage(EthernetClient cl)
    cl.println("<title>Status</title>");
    cl.println("</head>");
    cl.println("<body>");
-   cl.println("<h1>Currently in auto mode. Go to manual mode to set to manual mode. Go to auto mode to set to auto mode and/or change auto mode settings."); //Change Uncomment
+   cl.println("<h1>Currently in auto mode. Go to manual mode to set to manual mode. Go to auto mode to set to auto mode and/or change auto mode settings.</h1>"); 
    
    //Light
    cl.println("<h2>Light</h2>");
@@ -612,3 +648,134 @@ void sendStatusPage(EthernetClient cl)
    cl.println("</body>");
    cl.println("</html>");
 }
+void detectLaser1()
+{
+  if(digitalRead(laserPin1)==1-prevState[0])
+  {
+    laser[0][count]=1-prevState[0];
+    laser[1][count]=prevState[1];
+    prevState[0]=laser[0][count];
+    prevState[1]=laser[1][count];
+    count++;
+    if(count==5)
+    {
+      if(laser[0][0]==1 && laser[0][1]==0 && laser[0][2]==0 && laser[0][3]==1 && laser [0][4]==1&&
+         laser[1][0]==1 && laser[1][1]==1 && laser[1][2]==0 && laser[1][3]==0 && laser [1][4]==1 )
+         {
+           NUM_PERSONS++;
+           detected=true;
+         }
+         
+      else if(laser[1][0]==1 && laser[1][1]==0 && laser[1][2]==0 && laser[1][3]==1 && laser [1][4]==1&&
+         laser[0][0]==1 && laser[0][1]==1 && laser[0][2]==0 && laser[0][3]==0 && laser [0][4]==1 )
+        {
+           NUM_PERSONS--;
+           detected=true;
+         }
+       if(detected)
+       {
+         count=1;
+         prevState[0]=1;
+         prevState[1]=1;
+         detected=false;
+       }
+    }
+    if(count>4)
+    {
+      boolean flag1=true;
+      for(int i=0;i<4&&flag1;i++)
+      {
+        for(int j=i+1;j<6&&flag1;j++)
+        {
+          if(laser[0][i]==laser[0][j]&&laser[1][i]==laser[1][j])
+          {
+            count=i+1;
+            flag1=false;
+          }
+        }
+        
+      }
+      if(flag1)
+      {
+        count=4;
+        for(int i=0;i<4;i++)
+        {
+          laser[0][i]=laser[0][i+1];
+          laser[1][i]=laser[1][i+1];
+        }
+      }
+    }
+  }
+}
+void detectLaser2()
+{
+    if(digitalRead(laserPin2)==1-prevState[1])
+  {
+    laser[1][count]=1-prevState[1];
+    laser[0][count]=prevState[0];
+    prevState[0]=laser[0][count];
+    prevState[1]=laser[1][count];
+    count++;
+    if(count==5)
+    {
+      if(laser[0][0]==1 && laser[0][1]==0 && laser[0][2]==0 && laser[0][3]==1 && laser [0][4]==1&&
+         laser[1][0]==1 && laser[1][1]==1 && laser[1][2]==0 && laser[1][3]==0 && laser [1][4]==1 )
+         {
+           NUM_PERSONS++;
+           detected=true;
+         }
+         
+      else if(laser[1][0]==1 && laser[1][1]==0 && laser[1][2]==0 && laser[1][3]==1 && laser [1][4]==1&&
+         laser[0][0]==1 && laser[0][1]==1 && laser[0][2]==0 && laser[0][3]==0 && laser [0][4]==1 )
+        {
+           NUM_PERSONS--;
+           detected=true;
+         }
+       if(detected)
+       {
+         count=1;
+         prevState[0]=1;
+         prevState[1]=1;
+         detected=false;
+       }
+    }
+    if(count>4)
+    {
+      boolean flag1=true;
+      for(int i=0;i<4&&flag1;i++)
+      {
+        for(int j=i+1;j<6&&flag1;j++)
+        {
+          if(laser[0][i]==laser[0][j]&&laser[1][i]==laser[1][j])
+          {
+            count=i+1;
+            flag1=false;
+          }
+        }
+        
+      }
+      if(flag1)
+      {
+        count=4;
+        for(int i=0;i<4;i++)
+        {
+          laser[0][i]=laser[0][i+1];
+          laser[1][i]=laser[1][i+1];
+        }
+      }
+    }
+  }
+}
+void switchFan()
+{
+  if(MODE==AUTO_MODE)MODE=MANUAL_MODE;
+  if(F1->getState()==1)F1->off();
+  else F1->on();
+}
+void switchLight()
+{
+  if(MODE==AUTO_MODE)MODE=MANUAL_MODE;
+  if(L->getState()==1)L->off();
+  else L->on();
+}
+
