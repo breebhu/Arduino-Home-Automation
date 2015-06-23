@@ -40,9 +40,9 @@ byte AC_AMBIENT_TEMP=22;
 byte DEFAULT_AC_FAN_SPEED=1;
 //levels for fan and light
 const byte T5=24,T4=20,T3=16,T2=14,T1=12; //Denotes lower level of range,i.e. 5th level for T>T5,needs to be set high for final demo since heating the sensor is easier than cooling 
+const byte H1=50,H2=60,H3=80;	//Humidity levels for fan speed. Since we don't use humidity much, this seemed like the best place to put it
 const int LIGHT_THRESHOLD=600;
-const int L1=500,L2=400,L3=300;
-const byte RH_THRESHOLD=80;
+const int L1=500,L2=400;	//Since only 3 brightness levels
 
 //declare pins to be used in circuit
 byte* fanRegulatePins=new byte[3];    
@@ -207,52 +207,46 @@ void loop()
         if(TEMPERATURE>FAN_CUTOFF)
         {
           if(F1->getState()!=OFF)
-          {
             F1->off();
-          }
-          if(AC1->getState()!=ON||AC1->getTemp()!=AC_AMBIENT_TEMP||AC1->getFanSpeed()!=DEFAULT_AC_FAN_SPEED)AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
+          if(AC1->getState()!=ON||AC1->getTemp()!=AC_AMBIENT_TEMP||AC1->getFanSpeed()!=DEFAULT_AC_FAN_SPEED)
+          	AC1->set(AC_AMBIENT_TEMP,DEFAULT_AC_FAN_SPEED); 
     
         }
-        else if(TEMPERATURE<FAN_CUTOFF)
+        else
         {
             if(TEMPERATURE<AC_CUTOFF)
-	    {
-	       if(AC1->getState()==ON)AC1->off();
-	       if(TEMPERATURE>T1)
-	       {
-	          if(F1->getState()!=ON)F1->on();
-              	  if(TEMPERATURE>T5||HUMIDITY>RH_THRESHOLD)  
-		  F1->regulate(5);
-		  else if(TEMPERATURE>T4)
-		  F1->regulate(4);
-		  else if(TEMPERATURE>T3)
-		  F1->regulate(3);
-		  else if(TEMPERATURE>T2)
-		  F1->regulate(2);
-		  else if(TEMPERATURE>T1)
-		  F1->regulate(1);	
-	       }
-	      else 
-	          if(F1->getState()!=OFF)F1->off();
+            {
+	       		if(AC1->getState()==ON)
+	       			AC1->off();
+            }
+	       			
+	       	if((TEMPERATURE>T1 || HUMIDITY>H1) && AC1->getState()==OFF)
+	       	{
+	        	if(F1->getState()!=ON)
+	        		F1->on();
+              	if (HUMIDITY > H3)
+					F1->regulate(3);
+				else if (HUMIDITY > H2)
+					F1->regulate(2);
+				else
+					F1->regulate(1);	
+	       	}
+	      	else 
+	      	{
+	          if(F1->getState()!=OFF)
+	          	F1->off();
+	      	}
 	    }
-	    else
-	    {
-		if(AC1->getState()==OFF)
-			if(TEMPERATURE>T5)F1->regulate(5);
-			else F1->regulate(4);
-	    }
-        }
-       
     
         if(LIGHT_INTENSITY<LIGHT_THRESHOLD)   //dim(1) means highly dim, dim(3) is very bright
         {
-          if(LIGHT_INTENSITY<L1)
-             L->dim(1);
-          else if(LIGHT_INTENSITY<L2)
-             L->dim(2);
-          else if(LIGHT_INTENSITY<L3)
-             L->dim(3);
-          L->on();
+        	L->on();
+        	if(LIGHT_INTENSITY<L2)
+             	L->dim(3);
+          	else if(LIGHT_INTENSITY<L1)
+             	L->dim(2);
+            else
+            	L->dim(1);
         }
         else
         {

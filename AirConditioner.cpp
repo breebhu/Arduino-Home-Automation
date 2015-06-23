@@ -21,13 +21,9 @@ void AirConditioner::set(byte temperature, byte fspeed)
 }
 void AirConditioner::sendData(unsigned long data0,unsigned long data01)
 {
-<<<<<<< HEAD
   irsend.enableIROut(frequency);
-=======
   unsigned long data02=data0;
   unsigned long data03=data01;
-  irsend.enableIROut(FREQUENCY);
->>>>>>> 534bf1967ad2599ca454c0bc849da58d6cda3d5c
   irsend.mark(HMARK);
   irsend.space(HSPACE);
   for (int i = 0; i < 24; i++) {
