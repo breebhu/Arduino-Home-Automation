@@ -6,7 +6,6 @@
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-IPAddress ip(10, 9, 0, 138);
 // Initialize the Ethernet server library
 // with the IP address and port you want to use
 // (port 80 is default for HTTP):
@@ -175,7 +174,7 @@ void setup()
   L = new Light(22, lightRegulatePins, 3);
   AC1 = new AirConditioner(600, 470, 1550, 4400, 4300, 5000, 38, data, offData, 2, 3, 9, 24, 25);
   // start the Ethernet connection and the server:
-  Ethernet.begin(mac, ip);
+  Ethernet.begin(mac);
   server.begin();
   attachInterrupt(2, switchFan, CHANGE);
   attachInterrupt(3, switchLight, CHANGE);
