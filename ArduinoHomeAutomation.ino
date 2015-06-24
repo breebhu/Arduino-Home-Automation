@@ -3,6 +3,7 @@
 #include "Fan.h"
 #include <SPI.h>
 #include <Ethernet.h>
+#include <dht.h>
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -26,11 +27,22 @@ const byte MANUAL_MODE = 27;
 volatile byte MODE = AUTO_MODE;
 
 //Sensors
+const byte COUNT_VAL=25;
+dht DHT;
 volatile byte NUM_PERSONS = 0;
 boolean NO_MOTION = false;
 int LIGHT_INTENSITY = 0;
+byte rawLightIntensity[4];
+byte rawLightIntensity_T[4];
+int TEMPERATURE_T=0;
+int numDHTReadings=0;
+int numLDRReadings=0;
+long measureTime=0;
 byte TEMPERATURE = 0;
 byte HUMIDITY = 0;
+int HUMIDITY_T;
+
+boolean SENSOR_INITIALIZED=false;
 
 //Auto mode preferences
 byte FAN_CUTOFF = 28; //temperature above which fan is switched off and AC is switched on
@@ -51,6 +63,11 @@ const byte laserPin1 = 2, laserPin2 = 3;
 //pushButton pins
 const byte pushButtonFan = 21;
 const byte pushButtonLight = 20;
+//DHT pin
+const byte DHT22_PIN=22;
+//pins for LDR
+byte LDR_PIN[4];
+
 
 //create instances of devices
 Light* L;
@@ -64,6 +81,19 @@ boolean flag = true;
 volatile byte count = 0;
 volatile byte prevState[2];
 
+//struct for DHT22 sensor data
+struct
+{
+    uint32_t total;
+    uint32_t ok;
+    uint32_t crc_error;
+    uint32_t time_out;
+    uint32_t connect;
+    uint32_t ack_l;
+    uint32_t ack_h;
+    uint32_t unknown;
+} stat = { 0,0,0,0,0,0,0,0};
+
 void setup()
 {
   //start the system
@@ -75,6 +105,9 @@ void setup()
   lightRegulatePins[0] = 23;
   lightRegulatePins[1] = 24;
   lightRegulatePins[2] = 25;
+  
+  //declare LDR pins and set sensor pins to input mode
+  
   unsigned long*** data = new unsigned long**[14];
   for (int j = 0; j < 14; j++)
   {
@@ -222,11 +255,9 @@ void loop()
 
         if ((TEMPERATURE > T1 || HUMIDITY > H1) && AC1->getState() == OFF)
         {
-          if (F1->getState() != ON)
-            F1->on();
           if (HUMIDITY > H3||TEMPERATURE>T4)
             F1->regulate(4);
-          else if (HUMIDITY > H2&&TEMPERATURE>T3||(HUMDIDITY>H1&&TEMPERATURE>T3))
+          else if ((HUMIDITY > H2&&TEMPERATURE>T3)||(HUMIDITY>H1&&TEMPERATURE>T3))
             F1->regulate(3);
           else if(TEMPERATURE>T2||(HUMIDITY<H1&&TEMPERATURE>T3))
             F1->regulate(2);
@@ -268,7 +299,109 @@ void loop()
 
 void readSensorData()
 {
-
+    
+    noInterrupts();
+    if(millis()-measureTime>2000)
+    {
+      int chk = DHT.read22(DHT22_PIN);
+      stat.total++;
+      switch (chk)
+      {
+      case DHTLIB_OK:
+          stat.ok++;
+          //Serial.print("OK,\t");
+          if(SENSOR_INITIALIZED)
+          {
+            if(numDHTReadings<COUNT_VAL)
+            {
+              TEMPERATURE_T+=DHT.temperature;
+              HUMIDITY_T+=DHT.humidity;
+              numDHTReadings++;
+            }
+            else if(numDHTReadings==COUNT_VAL)
+            {
+              TEMPERATURE=(byte)(TEMPERATURE_T/COUNT_VAL);
+              HUMIDITY=(byte)(HUMIDITY_T/COUNT_VAL);
+              numDHTReadings=0;
+              TEMPERATURE_T=0;
+              HUMIDITY_T=0;
+            }
+            else
+            {
+              numDHTReadings=0;
+              TEMPERATURE_T=0;
+              HUMIDITY_T=0;
+            }
+          }
+          else
+          {
+              
+              TEMPERATURE=DHT.temperature;
+              HUMIDITY=DHT.humidity;
+              TEMPERATURE_T+=TEMPERATURE;
+              HUMIDITY_T+=HUMIDITY;
+              numDHTReadings++;
+          }
+          break;
+      case DHTLIB_ERROR_CHECKSUM:
+          stat.crc_error++;          
+          //Serial.print("Checksum error,\t");
+          break;
+      case DHTLIB_ERROR_TIMEOUT:
+          stat.time_out++;
+          //Serial.print("Time out error,\t");
+          break;
+      case DHTLIB_ERROR_CONNECT:
+          stat.connect++;
+          //Serial.print("Connect error,\t");
+          break;
+      case DHTLIB_ERROR_ACK_L:
+          stat.ack_l++;
+          //Serial.print("Ack Low error,\t");
+          break;
+      case DHTLIB_ERROR_ACK_H:
+          stat.ack_h++;
+          //Serial.print("Ack High error,\t");
+          break;
+      default:
+          stat.unknown++;
+          //Serial.print("Unknown error,\t");
+          break;
+      }
+      if(SENSOR_INITIALIZED)
+      {
+        if(numLDRReadings<COUNT_VAL)
+        {
+          for(int j=0;j<4;j++)rawLightIntensity_T[j]+=analogRead(LDR_PIN[j]);
+          numLDRReadings++;
+        }
+        else if(numLDRReadings==COUNT_VAL)
+        {
+          for(int j=0;j<4;j++)rawLightIntensity[j]=(int)(rawLightIntensity[j]/COUNT_VAL);
+          numLDRReadings=0;
+          for(int j=0;j<4;j++)rawLightIntensity_T[j]=0;
+          LIGHT_INTENSITY=(int)(rawLightIntensity[0]+rawLightIntensity[1]+rawLightIntensity[2]+rawLightIntensity[3])/4;
+        }
+        else
+        {
+          numLDRReadings=0;
+          for(int j=0;j<4;j++)rawLightIntensity_T[j]=0;
+        }
+      }
+      else
+      {
+        for(int j=0;j<4;j++)
+        {
+          rawLightIntensity[j]=analogRead(LDR_PIN[j]);
+          rawLightIntensity_T[j]+=rawLightIntensity[j];
+        }
+        numLDRReadings++;
+        LIGHT_INTENSITY=(int)(rawLightIntensity[0]+rawLightIntensity[1]+rawLightIntensity[2]+rawLightIntensity[3])/4;
+      }
+      measureTime=millis();
+     }
+      interrupts();
+      if(!SENSOR_INITIALIZED)SENSOR_INITIALIZED=true;
 }
 
 void handleWebRequest()
