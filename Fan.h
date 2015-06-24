@@ -2,22 +2,22 @@
 #define FAN_H
 #include <Arduino.h>
 #define STATE_ON 1
-#define STATE_OFF 0 
+#define STATE_OFF 0
 class Fan
 {
-private:
-   byte mainPin;
-   byte* regulatePins;
-   byte levels;
-   byte FAN_STATE;
-   byte FAN_SPEED;    
-public:
-   Fan(byte mPin,byte* pins,byte numLevel);
-   ~Fan();
-   byte getState();
-   byte getSpeed();
-   byte on();
-   byte off();
-   void regulate(byte speed);	
+  private:
+    byte mainPin;
+    byte* regulatePins;
+    byte levels;
+    byte FAN_STATE;
+    byte FAN_SPEED;
+  public:
+    Fan(byte mPin, byte* pins, byte numLevel);
+    ~Fan();
+    byte getState();
+    byte getSpeed();
+    byte on();
+    byte off();
+    void regulate(byte speed);
 };
 #endif
