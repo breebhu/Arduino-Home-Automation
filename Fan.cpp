@@ -14,7 +14,7 @@ Fan::Fan(byte mpin, byte* pins, byte numLevel)
     pinMode(regulatePins[i], OUTPUT);
   }
 }
-Light::Light(byte* pins, byte numLevel)
+Fan::Fan(byte* pins, byte numLevel)
 {
   mainPin = pins[numLevel - 1];
   regulatePins = pins;
