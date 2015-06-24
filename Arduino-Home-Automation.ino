@@ -483,14 +483,15 @@ void handleWebRequest()
 
               //Set fan speed
               value[0] = page[65];
-              if (value[0] == '0')
-                F1->off();
-              else if (value[0] == '1')
-                F1->regulate(1);
-              else if (value[0] == '2')
-                F1->regulate(2);
-              else
-                F1->regulate(3);
+              if(F1->getState() == ON)
+              {
+                if (value[0] == '1')
+                  F1->regulate(1);
+                else if (value[0] == '2')
+                  F1->regulate(2);
+                else
+                  F1->regulate(3);
+              }
 
               for (int i = 0; i < 5; i++)value[i] = ' ';
 
