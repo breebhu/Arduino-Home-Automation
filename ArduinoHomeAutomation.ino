@@ -32,11 +32,11 @@ dht DHT;
 volatile byte NUM_PERSONS = 0;
 boolean NO_MOTION = false;
 int LIGHT_INTENSITY = 0;
-byte rawLightIntensity[4];
-byte rawLightIntensity_T[4];
+int rawLightIntensity[4];
+int rawLightIntensity_T[4];
 int TEMPERATURE_T=0;
-int numDHTReadings=0;
-int numLDRReadings=0;
+byte numDHTReadings=0;
+byte numLDRReadings=0;
 long measureTime=0;
 byte TEMPERATURE = 0;
 byte HUMIDITY = 0;
@@ -256,11 +256,9 @@ void loop()
 
         if ((TEMPERATURE > T1 || HUMIDITY > H1) && AC1->getState() == OFF)
         {
-          if (HUMIDITY > H3||TEMPERATURE>T4)
-            F1->regulate(4);
-          else if ((HUMIDITY > H2&&TEMPERATURE>T3)||(HUMIDITY>H1&&TEMPERATURE>T3))
+          if (HUMIDITY > H3||TEMPERATURE>T3)
             F1->regulate(3);
-          else if(TEMPERATURE>T2||(HUMIDITY<H1&&TEMPERATURE>T3))
+          else if ((HUMIDITY > H2&&TEMPERATURE>T3)||(HUMIDITY>H1&&TEMPERATURE>T3))
             F1->regulate(2);
           else F1->regulate(1);
         }
