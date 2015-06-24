@@ -398,6 +398,7 @@ void readSensorData()
         numLDRReadings++;
         LIGHT_INTENSITY=(int)(rawLightIntensity[0]+rawLightIntensity[1]+rawLightIntensity[2]+rawLightIntensity[3])/4;
       }
+      measureTime=millis();
      }
       interrupts();
       if(!SENSOR_INITIALIZED)SENSOR_INITIALIZED=true;

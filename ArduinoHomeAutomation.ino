@@ -211,6 +211,7 @@ void setup()
   server.begin();
   attachInterrupt(2, switchFan, CHANGE);
   attachInterrupt(3, switchLight, CHANGE);
+  delay(2000);
 }
 void loop()
 {
