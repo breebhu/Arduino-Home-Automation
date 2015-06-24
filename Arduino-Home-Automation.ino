@@ -5,8 +5,7 @@
 #include <Ethernet.h>
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
-byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-IPAddress ip(10, 9, 0, 138);
+byte mac [] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 // Initialize the Ethernet server library
 // with the IP address and port you want to use
 // (port 80 is default for HTTP):
@@ -14,7 +13,7 @@ EthernetServer server(80);
 boolean clientConnected = false;
 
 //HTTP requests
-char page[110];
+char page[150];
 char value[5];
 int index = 0;
 
@@ -175,7 +174,7 @@ void setup()
   L = new Light(22, lightRegulatePins, 3);
   AC1 = new AirConditioner(600, 470, 1550, 4400, 4300, 5000, 38, data, offData, 2, 3, 9, 24, 25);
   // start the Ethernet connection and the server:
-  Ethernet.begin(mac, ip);
+  Ethernet.begin(mac);
   server.begin();
   attachInterrupt(2, switchFan, CHANGE);
   attachInterrupt(3, switchLight, CHANGE);
@@ -328,14 +327,15 @@ void handleWebRequest()
 
               //Set brightness
               value[0] = page[42];
-              if (value[0] == '0')
-                L->off();
-              else if (value[0] == '1')
-                L->dim(1);
-              else if (value[0] == '2')
-                L->dim(2);
-              else
-                L->dim(3);
+              if (L->getState() == ON)
+              {
+                if (value[0] == '1')
+                  L->dim(1);
+                else if (value[0] == '2')
+                  L->dim(2);
+                else
+                  L->dim(3);
+              }
 
               for (int i = 0; i < 5; i++)value[i] = ' ';
 
@@ -388,9 +388,9 @@ void handleWebRequest()
           //Auto mode settings
           else if (page[0] == 'a')
           {
-            int index = 21;
+            index = 21;
             //New state set //The seemingly random indexes are the places where values will be present when data is sent through the correct format.
-            if (page[index] = '?')
+            if (page[index] == '?')
             {
               LIGHT_THRESHOLD = 0;
               index += 16;
@@ -430,6 +430,7 @@ void handleWebRequest()
 
               index += 9;
               DEFAULT_AC_FAN_SPEED = (int) page[index] - 48;
+              index++;
 
               T1 = 0;
               index += 4;
@@ -457,7 +458,7 @@ void handleWebRequest()
 
               H3 = 0;
               index += 4;
-              for (; page[index] != '&'; index++)
+              for (; page[index] != ' '; index++)
               {
                 H3 *= 10;
                 H3 += (int) page[index] - 48;
@@ -493,30 +494,14 @@ void handleWebRequest()
 
 void lightRecommend(EthernetClient cl)
 {
-  if (LIGHT_INTENSITY < LIGHT_THRESHOLD)   //dim(1) means highly dim, dim(3) is very bright
+  if (NUM_PERSONS > 0)
   {
-    cl.println("On at brightness ");
-    if (LIGHT_INTENSITY < L2)
-      cl.println("3</p>");
-    else if (LIGHT_INTENSITY < L1)
-      cl.println("2</p>");
-    else
-      cl.println("3</p>");
-  }
-  else
-    cl.println("Off</p>");
-}
-
-void fanRecommend(EthernetClient cl)
-{
-  if (AC1->getState() == OFF)
-  {
-    if (TEMPERATURE > T1 && HUMIDITY > H1)
+    if (LIGHT_INTENSITY < LIGHT_THRESHOLD)   //dim(1) means highly dim, dim(3) is very bright
     {
-      cl.println("On at speed ");
-      if (HUMIDITY > H3)
+      cl.println("On at brightness ");
+      if (LIGHT_INTENSITY < L2)
         cl.println("3</p>");
-      else if (HUMIDITY > H2)
+      else if (LIGHT_INTENSITY < L1)
         cl.println("2</p>");
       else
         cl.println("1</p>");
@@ -524,22 +509,53 @@ void fanRecommend(EthernetClient cl)
     else
       cl.println("Off</p>");
   }
+  else
+    cl.println("Off</p>");
+}
 
+void fanRecommend(EthernetClient cl)
+{
+  if (NUM_PERSONS > 0)
+  {
+    if (AC1->getState() == OFF)
+    {
+      if (TEMPERATURE > T1 || HUMIDITY > H1)
+      {
+        cl.println("On at speed ");
+        if (HUMIDITY > H3)
+          cl.println("3</p>");
+        else if (HUMIDITY > H2)
+          cl.println("2</p>");
+        else
+          cl.println("1</p>");
+      }
+      else
+        cl.println("Off</p>");
+    }
+
+    else
+      cl.println("Off</p>");
+  }
   else
     cl.println("Off</p>");
 }
 
 void ACRecommend(EthernetClient cl)
 {
-  if (TEMPERATURE > FAN_CUTOFF)
+  if (NUM_PERSONS > 0)
   {
-    cl.println("On at temperature ");
-    cl.println(AC_AMBIENT_TEMP);
-    cl.println(" and fan speed ");
-    cl.println(DEFAULT_AC_FAN_SPEED);
-    cl.println("</p>");
-  }
+    if (TEMPERATURE > FAN_CUTOFF)
+    {
+      cl.println("On at temperature ");
+      cl.println(AC_AMBIENT_TEMP);
+      cl.println(" and fan speed ");
+      cl.println(DEFAULT_AC_FAN_SPEED);
+      cl.println("</p>");
+    }
 
+    else
+      cl.println("Off</p>");
+  }
   else
     cl.println("Off</p>");
 }
@@ -554,6 +570,9 @@ void sendManualPage(EthernetClient cl)
   cl.println("</head>");
   cl.println("<body>");
   cl.println("<h1>Currently in manual mode. Go to the auto mode page to set it to auto mode. Go to auto mode settings page to change auto mode settings.</h1>");
+  cl.print("<h2>");
+  cl.print(NUM_PERSONS);
+  cl.println(" persons in the room</h2>");
   cl.println("<form method=\"get\">");
 
   cl.println("<h2>Light</h2>");
@@ -668,13 +687,13 @@ void sendManualPage(EthernetClient cl)
   }
   cl.println("<br />");
 
-  cl.println("Temperature:<input type=\"number\" id=\"ACTemperature\" name=\"ACTemperature\" min=\"17\" max=\"30\" value=\"");
-  cl.println(AC1->getTemp());
+  cl.print("Temperature:<input type=\"number\" id=\"ACTemperature\" name=\"ACTemperature\" min=\"17\" max=\"30\" value=\"");
+  cl.print(AC1->getTemp());
   cl.println("\" />");
   cl.println("<br />");
 
-  cl.println("Fan speed:<input type=\"number\" id=\"ACSpeed\" name=\"ACSpeed\" min=\"1\" max=\"3\" value=\"");
-  cl.println(AC1->getFanSpeed());
+  cl.print("Fan speed:<input type=\"number\" id=\"ACSpeed\" name=\"ACSpeed\" min=\"1\" max=\"3\" value=\"");
+  cl.print(AC1->getFanSpeed());
   cl.println("\" />");
 
   cl.println("<p id=\"ACStatus\">Current status is ");
@@ -723,6 +742,10 @@ void sendStatusPage(EthernetClient cl)
   cl.println("<body>");
   cl.println("<h1>Currently in auto mode. Go to manual mode to set to manual mode. Go to auto mode settings page to change auto mode settings.</h1>");
 
+  cl.print("<h2>");
+  cl.print(NUM_PERSONS);
+  cl.println(" persons in the room</h2>");
+
   //Light
   cl.println("<h2>Light</h2>");
   cl.println("<br />");
@@ -744,6 +767,7 @@ void sendStatusPage(EthernetClient cl)
   cl.println("<p id=\"ldrReading\">LDR reading is");
   cl.println(LIGHT_INTENSITY);
   cl.println("</p>");
+
   cl.println("<p id=\"lightRecommended\">Recommended:"); //Light Recommended
   lightRecommend(cl);
 
@@ -844,33 +868,34 @@ void sendAutoPage(EthernetClient cl)
   else
     cl.println("off</p>");
 
-  cl.println("<p>On below:");
-  cl.print("<input type=\"number\" name=\"lightThreshold\" id=\"lightThreshold\" min=");
+  cl.println("<br/>");
+  cl.print("On below:");
+  cl.print("<input type=\"number\" name=\"lightThreshold\" id=\"lightThreshold\" min=\"");
   cl.print(L1);
-  cl.print(" max=1023 value=");
+  cl.print("\" max=1023 value=\"");
   cl.print(LIGHT_THRESHOLD);
-  cl.println(" />");
-  cl.println("</p>");
+  cl.println("\" />");
 
-  cl.println("<p>Brightness level 2 below:");
-  cl.print("<input type=\"number\" name=\"L1\" id=\"L1\" min=");
+  cl.println("<br/>");
+  cl.print("Brightness level 2 below:");
+  cl.print("<input type=\"number\" name=\"L1\" id=\"L1\" min=\"");
   cl.print(L2);
-  cl.print(" max=");
+  cl.print("\" max=\"");
   cl.print(LIGHT_THRESHOLD);
-  cl.print(" value=");
+  cl.print("\" value=\"");
   cl.print(L1);
-  cl.println(" />");
-  cl.println("</p>");
+  cl.println("\" />");
 
 
-  cl.println("<p>Brightness level 3 below:");
-  cl.print("<input type=\"number\" name=\"L2\" id=\"L2\" min=0 max=");
+  cl.println("<br/>");
+  cl.print("Brightness level 3 below:");
+  cl.print("<input type=\"number\" name=\"L2\" id=\"L2\" min=0 max=\"");
   cl.print(L1);
-  cl.print(" value=");
+  cl.print("\" value=\"");
   cl.print(L2);
-  cl.println(" />");
-  cl.println("</p>");
+  cl.println("\" />");
 
+  cl.println("<br/>");
   cl.println("<input type=\"submit\" />");
 
   cl.println("<h2>Fan</h2>");
@@ -909,52 +934,53 @@ void sendAutoPage(EthernetClient cl)
   else
     cl.println("off</p>");
 
-  cl.println("<p>Ambient temperature:");
-  cl.print("<input type=\"number\" name=\"ambientTemperature\" id=\"ambientTemperature\" min=21 max=34 value=");
+  cl.println("<br/>");
+  cl.print("Ambient temperature:");
+  cl.print("<input type=\"number\" name=\"ambientTemperature\" id=\"ambientTemperature\" min=21 max=34 value=\"");
   cl.print(FAN_CUTOFF - 2);
-  cl.println(" />");
-  cl.println("</p>");
+  cl.println("\" />");
 
-  cl.println("<p>Default AC fan speed:");
-  cl.print("<input type=\"number\" name=\"ACSpeed\" id=\"ACSpeed\" min=1 max=3 value=");
+  cl.println("<br/>");
+  cl.print("Default AC fan speed:");
+  cl.print("<input type=\"number\" name=\"ACSpeed\" id=\"ACSpeed\" min=1 max=3 value=\"");
   cl.print(DEFAULT_AC_FAN_SPEED);
-  cl.println(" />");
-  cl.println("</p>");
+  cl.println("\" />");
 
-  cl.println("<p>Fan on above temperature:");
-  cl.print("<input type=\"number\" name=\"T1\" id=\"T1\" min=0 max=");
+  cl.println("<br/>");
+  cl.print("Fan on above temperature:");
+  cl.print("<input type=\"number\" name=\"T1\" id=\"T1\" min=0 max=\"");
   cl.print(AC_CUTOFF);
-  cl.print(" value=");
+  cl.print("\" value=\"");
   cl.print(T1);
-  cl.println(" />");
-  cl.println("</p>");
+  cl.println("\" />");
 
-  cl.println("<p>Fan on above humidity:");
-  cl.print("<input type=\"number\" name=\"H1\" id=\"H1\" min=0 max=");
+  cl.println("<br/>");
+  cl.print("Fan on above humidity:");
+  cl.print("<input type=\"number\" name=\"H1\" id=\"H1\" min=0 max=\"");
   cl.print(H2);
-  cl.print(" value=");
+  cl.print("\" value=\"");
   cl.print(H1);
-  cl.println(" />");
-  cl.println("</p>");
+  cl.println("\" />");
 
-  cl.println("<p>Fan speed 2 above humidity:");
-  cl.print("<input type=\"number\" name=\"H2\" id=\"H2\" min=");
+  cl.println("<br/>");
+  cl.print("Fan speed 2 above humidity:");
+  cl.print("<input type=\"number\" name=\"H2\" id=\"H2\" min=\"");
   cl.print(H1);
-  cl.print(" max=");
+  cl.print("\" max=\"");
   cl.print(H3);
-  cl.print(" value=");
+  cl.print("\" value=\"");
   cl.print(H2);
-  cl.println(" />");
-  cl.println("</p>");
+  cl.println("\" />");
 
-  cl.println("<p>Fan speed 3 above humidity:");
-  cl.print("<input type=\"number\" name=\"H3\" id=\"H3\" min=");
+  cl.println("<br/>");
+  cl.print("Fan speed 3 above humidity:");
+  cl.print("<input type=\"number\" name=\"H3\" id=\"H3\" min=\"");
   cl.print(H2);
-  cl.print(" max=100 value=");
+  cl.print("\" max=100 value=\"");
   cl.print(H3);
-  cl.println(" />");
-  cl.println("</p>");
+  cl.println("\" />");
 
+  cl.println("<br/>");
   cl.println("<input type=\"submit\" />");
   cl.println("</form>");
 
@@ -978,15 +1004,15 @@ void detectLaser1()
     count++;
     if (count == 5)
     {
-      if (laser[0][0] == 1 && laser[0][1] == 0 && laser[0][2] == 0 && laser[0][3] == 1 && laser [0][4] == 1 &&
-          laser[1][0] == 1 && laser[1][1] == 1 && laser[1][2] == 0 && laser[1][3] == 0 && laser [1][4] == 1 )
+      if (laser[0][0] == 1 && laser[0][1] == 0 && laser[0][2] == 0 && laser[0][3] == 1 && laser[0][4] == 1 &&
+          laser[1][0] == 1 && laser[1][1] == 1 && laser[1][2] == 0 && laser[1][3] == 0 && laser[1][4] == 1)
       {
         NUM_PERSONS++;
         detected = true;
       }
 
-      else if (laser[1][0] == 1 && laser[1][1] == 0 && laser[1][2] == 0 && laser[1][3] == 1 && laser [1][4] == 1 &&
-               laser[0][0] == 1 && laser[0][1] == 1 && laser[0][2] == 0 && laser[0][3] == 0 && laser [0][4] == 1 )
+      else if (laser[1][0] == 1 && laser[1][1] == 0 && laser[1][2] == 0 && laser[1][3] == 1 && laser[1][4] == 1 &&
+               laser[0][0] == 1 && laser[0][1] == 1 && laser[0][2] == 0 && laser[0][3] == 0 && laser[0][4] == 1)
       {
         NUM_PERSONS--;
         detected = true;
@@ -1037,15 +1063,15 @@ void detectLaser2()
     count++;
     if (count == 5)
     {
-      if (laser[0][0] == 1 && laser[0][1] == 0 && laser[0][2] == 0 && laser[0][3] == 1 && laser [0][4] == 1 &&
-          laser[1][0] == 1 && laser[1][1] == 1 && laser[1][2] == 0 && laser[1][3] == 0 && laser [1][4] == 1 )
+      if (laser[0][0] == 1 && laser[0][1] == 0 && laser[0][2] == 0 && laser[0][3] == 1 && laser[0][4] == 1 &&
+          laser[1][0] == 1 && laser[1][1] == 1 && laser[1][2] == 0 && laser[1][3] == 0 && laser[1][4] == 1)
       {
         NUM_PERSONS++;
         detected = true;
       }
 
-      else if (laser[1][0] == 1 && laser[1][1] == 0 && laser[1][2] == 0 && laser[1][3] == 1 && laser [1][4] == 1 &&
-               laser[0][0] == 1 && laser[0][1] == 1 && laser[0][2] == 0 && laser[0][3] == 0 && laser [0][4] == 1 )
+      else if (laser[1][0] == 1 && laser[1][1] == 0 && laser[1][2] == 0 && laser[1][3] == 1 && laser[1][4] == 1 &&
+               laser[0][0] == 1 && laser[0][1] == 1 && laser[0][2] == 0 && laser[0][3] == 0 && laser[0][4] == 1)
       {
         NUM_PERSONS--;
         detected = true;
