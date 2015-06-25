@@ -206,7 +206,7 @@ void setup()
   
   F1 = new Fan(26, fanRegulatePins, 3);
   L = new Light(22, lightRegulatePins, 3);
-  AC1 = new AirConditioner(600, 470, 1550, 4400, 4300, 5000, 38, data, offData, 2, 3, 9, 17, 30);
+  AC1 = new AirConditioner(600, 470, 1550, 4400, 4300, 5000, 38, data, offData, 2, 3, 9, 30, 17);
   
   // start the Ethernet connection and the server:
   Ethernet.begin(mac);
