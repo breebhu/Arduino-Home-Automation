@@ -32,15 +32,15 @@ dht DHT;
 volatile byte NUM_PERSONS = 0;
 boolean NO_MOTION = false;
 int LIGHT_INTENSITY = 0;
-int rawLightIntensity[4];
-int rawLightIntensity_T[4];
+int rawLightIntensity[4] = {0,0,0,0};
+int rawLightIntensity_T[4] = {0,0,0,0};
 int TEMPERATURE_T=0;
 byte numDHTReadings=0;
 byte numLDRReadings=0;
 long measureTime=0;
 byte TEMPERATURE = 0;
 byte HUMIDITY = 0;
-int HUMIDITY_T;
+int HUMIDITY_T = 0;
 
 boolean SENSOR_INITIALIZED=false;
 
@@ -203,9 +203,11 @@ void setup()
   unsigned long* offData = new unsigned long[2];
   offData[0] = 0xB24D7B;
   offData[1] = 0x84E01F;
+  
   F1 = new Fan(26, fanRegulatePins, 3);
   L = new Light(22, lightRegulatePins, 3);
   AC1 = new AirConditioner(600, 470, 1550, 4400, 4300, 5000, 38, data, offData, 2, 3, 9, 24, 25);
+  
   // start the Ethernet connection and the server:
   Ethernet.begin(mac);
   server.begin();
