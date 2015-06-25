@@ -375,7 +375,7 @@ void readSensorData()
       }
       else if(numLDRReadings==COUNT_VAL)
       {
-        for(int j=0;j<4;j++)rawLightIntensity[j]=(int)(rawLightIntensity[j]/COUNT_VAL);
+        for(int j=0;j<4;j++)rawLightIntensity[j]=(int)(rawLightIntensity_T[j]/COUNT_VAL);
         numLDRReadings=0;
         for(int j=0;j<4;j++)rawLightIntensity_T[j]=0;
         LIGHT_INTENSITY=(int)(rawLightIntensity[0]+rawLightIntensity[1]+rawLightIntensity[2]+rawLightIntensity[3])/4;
