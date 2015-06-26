@@ -204,8 +204,8 @@ void setup()
   offData[0] = 0xB24D7B;
   offData[1] = 0x84E01F;
   
-  F1 = new Fan(26, fanRegulatePins, 3);
-  L = new Light(22, lightRegulatePins, 3);
+  F1 = new Fan(fanRegulatePins, 3);
+  L = new Light(lightRegulatePins, 3);
   AC1 = new AirConditioner(600, 470, 1550, 4400, 4300, 5000, 38, data, offData, 2, 3, 9, 30, 17);
   
   // start the Ethernet connection and the server:
