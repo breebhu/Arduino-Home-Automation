@@ -1111,123 +1111,144 @@ void sendAutoPage(EthernetClient cl)
 }
 
 
+
 void detectLaser1()
 {
-	if (digitalRead(laserPin1) == 1 - prevState[0])
-	{
-		laser[0][count] = 1 - prevState[0];
-		laser[1][count] = prevState[1];
-		prevState[0] = laser[0][count];
-		prevState[1] = laser[1][count];
-		count++;
-		if (count == 5)
-		{
-			if (laser[0][0] == 1 && laser[0][1] == 0 && laser[0][2] == 0 && laser[0][3] == 1 && laser[0][4] == 1 &&
-				laser[1][0] == 1 && laser[1][1] == 1 && laser[1][2] == 0 && laser[1][3] == 0 && laser[1][4] == 1)
-			{
-				NUM_PERSONS++;
-				detected = true;
-			}
+  if (digitalRead(laserPin1) == 1 - prevState[0])
+  {
+    laser[0][count] = 1 - prevState[0];
+    laser[1][count] = prevState[1];
+    prevState[0] = laser[0][count];
+    prevState[1] = laser[1][count];
+    count++;   
+//    if(count==1)digitalWrite(11,HIGH);
+//    if(count==2)digitalWrite(9,HIGH);
+//    if(count==3)digitalWrite(10,HIGH);
+//    if(count==4)digitalWrite(8,HIGH);
+//    if(count==5)digitalWrite(7,HIGH);
+    if (count == 5)
+    {
+      digitalWrite(13,HIGH);
+      if (laser[0][0] == 1 && laser[0][1] == 0 && laser[0][2] == 0 && laser[0][3] == 1 && laser[0][4] == 1 &&
+          laser[1][0] == 1 && laser[1][1] == 1 && laser[1][2] == 0 && laser[1][3] == 0 && laser[1][4] == 1)
+      {
+//        digitalWrite(5,HIGH);
+        NUM_PERSONS++;
+        detected = true;
+      }
 
-			else if (laser[1][0] == 1 && laser[1][1] == 0 && laser[1][2] == 0 && laser[1][3] == 1 && laser[1][4] == 1 &&
-				laser[0][0] == 1 && laser[0][1] == 1 && laser[0][2] == 0 && laser[0][3] == 0 && laser[0][4] == 1)
-			{
-				NUM_PERSONS--;
-				detected = true;
-			}
-			if (detected)
-			{
-				count = 1;
-				prevState[0] = 1;
-				prevState[1] = 1;
-				detected = false;
-			}
-		}
-		if (count > 4)
-		{
-			boolean flag1 = true;
-			for (int i = 0; i < 4 && flag1; i++)
-			{
-				for (int j = i + 1; j < 6 && flag1; j++)
-				{
-					if (laser[0][i] == laser[0][j] && laser[1][i] == laser[1][j])
-					{
-						count = i + 1;
-						flag1 = false;
-					}
-				}
+      else if (laser[1][0] == 1 && laser[1][1] == 0 && laser[1][2] == 0 && laser[1][3] == 1 && laser[1][4] == 1 &&
+               laser[0][0] == 1 && laser[0][1] == 1 && laser[0][2] == 0 && laser[0][3] == 0 && laser[0][4] == 1)
+      {
+//        digitalWrite(4,HIGH);
+        NUM_PERSONS--;
+        detected = true;
+      }
+      if (detected)
+      {
+        
+        count = 1;
+        prevState[0] = 1;
+        prevState[1] = 1;
+        detected = false;
+      }
+    }
+      boolean flag1 = true;
+      for (int i = 0; i < count-1 && flag1; i++)
+      {
+        for (int j = i + 1; j < count && flag1; j++)
+        {
+          if (laser[0][i] == laser[0][j] && laser[1][i] == laser[1][j])
+          {
+//            digitalWrite(6,HIGH);
+            count = i + 1;
+            flag1 = false;
+          }
+        }
 
-			}
-			if (flag1)
-			{
-				count = 4;
-				for (int i = 0; i < 4; i++)
-				{
-					laser[0][i] = laser[0][i + 1];
-					laser[1][i] = laser[1][i + 1];
-				}
-			}
-		}
-	}
+      }
+       if (count > 4)
+    {
+      if (flag1)
+      {
+        count = 4;
+        for (int i = 0; i < 4; i++)
+        {
+          laser[0][i] = laser[0][i + 1];
+          laser[1][i] = laser[1][i + 1];
+        }
+      }
+    }
+  }
 }
 void detectLaser2()
 {
-	if (digitalRead(laserPin2) == 1 - prevState[1])
-	{
-		laser[1][count] = 1 - prevState[1];
-		laser[0][count] = prevState[0];
-		prevState[0] = laser[0][count];
-		prevState[1] = laser[1][count];
-		count++;
-		if (count == 5)
-		{
-			if (laser[0][0] == 1 && laser[0][1] == 0 && laser[0][2] == 0 && laser[0][3] == 1 && laser[0][4] == 1 &&
-				laser[1][0] == 1 && laser[1][1] == 1 && laser[1][2] == 0 && laser[1][3] == 0 && laser[1][4] == 1)
-			{
-				NUM_PERSONS++;
-				detected = true;
-			}
+  if (digitalRead(laserPin2) == 1 - prevState[1])
+  {
+    laser[1][count] = 1 - prevState[1];
+    laser[0][count] = prevState[0];
+    prevState[0] = laser[0][count];
+    prevState[1] = laser[1][count];
+    count++;
+    if (count == 5)
+    {
+      digitalWrite(13,HIGH);
+      if (laser[0][0] == 1 && laser[0][1] == 0 && laser[0][2] == 0 && laser[0][3] == 1 && laser[0][4] == 1 &&
+          laser[1][0] == 1 && laser[1][1] == 1 && laser[1][2] == 0 && laser[1][3] == 0 && laser[1][4] == 1)
+      {
+//        digitalWrite(5,HIGH);
+        NUM_PERSONS++;
+        detected = true;
+      }
 
-			else if (laser[1][0] == 1 && laser[1][1] == 0 && laser[1][2] == 0 && laser[1][3] == 1 && laser[1][4] == 1 &&
-				laser[0][0] == 1 && laser[0][1] == 1 && laser[0][2] == 0 && laser[0][3] == 0 && laser[0][4] == 1)
-			{
-				NUM_PERSONS--;
-				detected = true;
-			}
-			if (detected)
-			{
-				count = 1;
-				prevState[0] = 1;
-				prevState[1] = 1;
-				detected = false;
-			}
-		}
-		if (count > 4)
-		{
-			boolean flag1 = true;
-			for (int i = 0; i < 4 && flag1; i++)
-			{
-				for (int j = i + 1; j < 6 && flag1; j++)
-				{
-					if (laser[0][i] == laser[0][j] && laser[1][i] == laser[1][j])
-					{
-						count = i + 1;
-						flag1 = false;
-					}
-				}
+      else if (laser[1][0] == 1 && laser[1][1] == 0 && laser[1][2] == 0 && laser[1][3] == 1 && laser[1][4] == 1 &&
+               laser[0][0] == 1 && laser[0][1] == 1 && laser[0][2] == 0 && laser[0][3] == 0 && laser[0][4] == 1)
+      {
+//        digitalWrite(4,HIGH);
+        NUM_PERSONS--;
+        detected = true;
+      }
+      if (detected)
+      {
+        
+        count = 1;
+        prevState[0] = 1;
+        prevState[1] = 1;
+        detected = false;
+      }
+    }
+//    if(count==1)digitalWrite(11,HIGH);
+//    if(count==2)digitalWrite(9,HIGH);
+//    if(count==3)digitalWrite(10,HIGH);
+//    if(count==4)digitalWrite(8,HIGH);
+//    if(count==5)digitalWrite(7,HIGH);
+      boolean flag1 = true;
+      for (int i = 0; i < count-1 && flag1; i++)
+      {
+        for (int j = i + 1; j < count && flag1; j++)
+        {
+          if (laser[0][i] == laser[0][j] && laser[1][i] == laser[1][j])
+          {
+            
+            count = i + 1;
+            flag1 = false;
+          }
+        }
 
-			}
-			if (flag1)
-			{
-				count = 4;
-				for (int i = 0; i < 4; i++)
-				{
-					laser[0][i] = laser[0][i + 1];
-					laser[1][i] = laser[1][i + 1];
-				}
-			}
-		}
-	}
+      }
+    if (count > 4)
+    {
+      if (flag1)
+      {
+        count = 4;
+        for (int i = 0; i < 4; i++)
+        {
+          laser[0][i] = laser[0][i + 1];
+          laser[1][i] = laser[1][i + 1];
+        }
+      }
+    }
+  }
 }
 void switchFan()
 {
