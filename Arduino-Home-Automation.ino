@@ -32,15 +32,15 @@ dht DHT;
 volatile byte NUM_PERSONS = 0;
 boolean NO_MOTION = false;
 int LIGHT_INTENSITY = 0;
-int rawLightIntensity[4];
-int rawLightIntensity_T[4];
+int rawLightIntensity[4] = {0,0,0,0};
+int rawLightIntensity_T[4] = {0,0,0,0};
 int TEMPERATURE_T=0;
 byte numDHTReadings=0;
 byte numLDRReadings=0;
 long measureTime=0;
 byte TEMPERATURE = 0;
 byte HUMIDITY = 0;
-int HUMIDITY_T;
+int HUMIDITY_T = 0;
 
 boolean SENSOR_INITIALIZED=false;
 
@@ -51,7 +51,7 @@ byte AC_AMBIENT_TEMP = 22;
 byte DEFAULT_AC_FAN_SPEED = 1;
 
 //levels for fan and light; not constant since user can set it through auto mode settings
-byte T5 = 24, T4 = 20, T3 = 16, T2 = 14, T1 = 12; //Denotes lower level of range,i.e. 5th level for T>T5,needs to be set high for final demo since heating the sensor is easier than cooling
+byte T3 = 16, T2 = 14, T1 = 12; //Denotes lower level of range,i.e. 5th level for T>T5,needs to be set high for final demo since heating the sensor is easier than cooling
 byte H1 = 50, H2 = 60, H3 = 80;	//Humidity levels for fan speed. Since we don't use humidity much, this seemed like the best place to put it
 int LIGHT_THRESHOLD = 600;
 int L1 = 500, L2 = 400;	//Since only 3 brightness levels
@@ -66,7 +66,7 @@ const byte pushButtonLight = 20;
 //DHT pin
 const byte DHT22_PIN=22;
 //pins for LDR
-byte LDR_PIN[4];
+byte LDR_PIN[4] = {A0,A0,A0,A0};        //Use different pin if required
 
 
 //create instances of devices
@@ -203,9 +203,11 @@ void setup()
   unsigned long* offData = new unsigned long[2];
   offData[0] = 0xB24D7B;
   offData[1] = 0x84E01F;
+  
   F1 = new Fan(26, fanRegulatePins, 3);
   L = new Light(22, lightRegulatePins, 3);
-  AC1 = new AirConditioner(600, 470, 1550, 4400, 4300, 5000, 38, data, offData, 2, 3, 9, 24, 25);
+  AC1 = new AirConditioner(600, 470, 1550, 4400, 4300, 5000, 38, data, offData, 2, 3, 9, 30, 17);
+  
   // start the Ethernet connection and the server:
   Ethernet.begin(mac);
   server.begin();
@@ -260,7 +262,8 @@ void loop()
             F1->regulate(3);
           else if ((HUMIDITY > H2&&TEMPERATURE>T3)||(HUMIDITY>H1&&TEMPERATURE>T3))
             F1->regulate(2);
-          else F1->regulate(1);
+          else 
+            F1->regulate(1);
         }
         else
         {
@@ -298,109 +301,104 @@ void loop()
 
 void readSensorData()
 {
-    
     noInterrupts();
-    if(millis()-measureTime>2000)
+    int chk = DHT.read22(DHT22_PIN);
+    stat.total++;
+    switch (chk)
     {
-      int chk = DHT.read22(DHT22_PIN);
-      stat.total++;
-      switch (chk)
-      {
-      case DHTLIB_OK:
-          stat.ok++;
-          //Serial.print("OK,\t");
-          if(SENSOR_INITIALIZED)
+    case DHTLIB_OK:
+        stat.ok++;
+        //Serial.print("OK,\t");
+        if(SENSOR_INITIALIZED)
+        {
+          if(numDHTReadings<COUNT_VAL)
           {
-            if(numDHTReadings<COUNT_VAL)
-            {
-              TEMPERATURE_T+=DHT.temperature;
-              HUMIDITY_T+=DHT.humidity;
-              numDHTReadings++;
-            }
-            else if(numDHTReadings==COUNT_VAL)
-            {
-              TEMPERATURE=(byte)(TEMPERATURE_T/COUNT_VAL);
-              HUMIDITY=(byte)(HUMIDITY_T/COUNT_VAL);
-              numDHTReadings=0;
-              TEMPERATURE_T=0;
-              HUMIDITY_T=0;
-            }
-            else
-            {
-              numDHTReadings=0;
-              TEMPERATURE_T=0;
-              HUMIDITY_T=0;
-            }
+            TEMPERATURE_T+=DHT.temperature;
+            HUMIDITY_T+=DHT.humidity;
+            numDHTReadings++;
+          }
+          else if(numDHTReadings==COUNT_VAL)
+          {
+            TEMPERATURE=(byte)(TEMPERATURE_T/COUNT_VAL);
+            HUMIDITY=(byte)(HUMIDITY_T/COUNT_VAL);
+            numDHTReadings=0;
+            TEMPERATURE_T=0;
+            HUMIDITY_T=0;
           }
           else
           {
-              
-              TEMPERATURE=DHT.temperature;
-              HUMIDITY=DHT.humidity;
-              TEMPERATURE_T+=TEMPERATURE;
-              HUMIDITY_T+=HUMIDITY;
-              numDHTReadings++;
+            numDHTReadings=0;
+            TEMPERATURE_T=0;
+            HUMIDITY_T=0;
           }
-          break;
-      case DHTLIB_ERROR_CHECKSUM:
-          stat.crc_error++;          
-          //Serial.print("Checksum error,\t");
-          break;
-      case DHTLIB_ERROR_TIMEOUT:
-          stat.time_out++;
-          //Serial.print("Time out error,\t");
-          break;
-      case DHTLIB_ERROR_CONNECT:
-          stat.connect++;
-          //Serial.print("Connect error,\t");
-          break;
-      case DHTLIB_ERROR_ACK_L:
-          stat.ack_l++;
-          //Serial.print("Ack Low error,\t");
-          break;
-      case DHTLIB_ERROR_ACK_H:
-          stat.ack_h++;
-          //Serial.print("Ack High error,\t");
-          break;
-      default:
-          stat.unknown++;
-          //Serial.print("Unknown error,\t");
-          break;
-      }
-      if(SENSOR_INITIALIZED)
-      {
-        if(numLDRReadings<COUNT_VAL)
-        {
-          for(int j=0;j<4;j++)rawLightIntensity_T[j]+=analogRead(LDR_PIN[j]);
-          numLDRReadings++;
-        }
-        else if(numLDRReadings==COUNT_VAL)
-        {
-          for(int j=0;j<4;j++)rawLightIntensity[j]=(int)(rawLightIntensity[j]/COUNT_VAL);
-          numLDRReadings=0;
-          for(int j=0;j<4;j++)rawLightIntensity_T[j]=0;
-          LIGHT_INTENSITY=(int)(rawLightIntensity[0]+rawLightIntensity[1]+rawLightIntensity[2]+rawLightIntensity[3])/4;
         }
         else
         {
-          numLDRReadings=0;
-          for(int j=0;j<4;j++)rawLightIntensity_T[j]=0;
+            TEMPERATURE=DHT.temperature;
+            HUMIDITY=DHT.humidity;
+            TEMPERATURE_T+=TEMPERATURE;
+            HUMIDITY_T+=HUMIDITY;
+            numDHTReadings++;
         }
+        break;
+    case DHTLIB_ERROR_CHECKSUM:
+        stat.crc_error++;          
+        //Serial.print("Checksum error,\t");
+        break;
+    case DHTLIB_ERROR_TIMEOUT:
+        stat.time_out++;
+        //Serial.print("Time out error,\t");
+        break;
+    case DHTLIB_ERROR_CONNECT:
+        stat.connect++;
+        //Serial.print("Connect error,\t");
+        break;
+    case DHTLIB_ERROR_ACK_L:
+        stat.ack_l++;
+        //Serial.print("Ack Low error,\t");
+        break;
+    case DHTLIB_ERROR_ACK_H:
+        stat.ack_h++;
+        //Serial.print("Ack High error,\t");
+        break;
+    default:
+        stat.unknown++;
+        //Serial.print("Unknown error,\t");
+        break;
+    }
+    if(SENSOR_INITIALIZED)
+    {
+      if(numLDRReadings<COUNT_VAL)
+      {
+        for(int j=0;j<4;j++)rawLightIntensity_T[j]+=analogRead(LDR_PIN[j]);
+        numLDRReadings++;
+      }
+      else if(numLDRReadings==COUNT_VAL)
+      {
+        for(int j=0;j<4;j++)rawLightIntensity[j]=(int)(rawLightIntensity_T[j]/COUNT_VAL);
+        numLDRReadings=0;
+        for(int j=0;j<4;j++)rawLightIntensity_T[j]=0;
+        LIGHT_INTENSITY=(int)(rawLightIntensity[0]+rawLightIntensity[1]+rawLightIntensity[2]+rawLightIntensity[3])/4;
       }
       else
       {
-        for(int j=0;j<4;j++)
-        {
-          rawLightIntensity[j]=analogRead(LDR_PIN[j]);
-          rawLightIntensity_T[j]+=rawLightIntensity[j];
-        }
-        numLDRReadings++;
-        LIGHT_INTENSITY=(int)(rawLightIntensity[0]+rawLightIntensity[1]+rawLightIntensity[2]+rawLightIntensity[3])/4;
+        numLDRReadings=0;
+        for(int j=0;j<4;j++)rawLightIntensity_T[j]=0;
       }
-      measureTime=millis();
-     }
-      interrupts();
-      if(!SENSOR_INITIALIZED)SENSOR_INITIALIZED=true;
+    }
+    else
+    {
+      for(int j=0;j<4;j++)
+      {
+        rawLightIntensity[j]=analogRead(LDR_PIN[j]);
+        rawLightIntensity_T[j]+=rawLightIntensity[j];
+      }
+      numLDRReadings++;
+      LIGHT_INTENSITY=(int)(rawLightIntensity[0]+rawLightIntensity[1]+rawLightIntensity[2]+rawLightIntensity[3])/4;
+    }
+    measureTime=millis();
+    interrupts();
+    if(!SENSOR_INITIALIZED)SENSOR_INITIALIZED=true;
 }
 
 void handleWebRequest()
@@ -581,6 +579,14 @@ void handleWebRequest()
                 H1 *= 10;
                 H1 += (int) page[index] - 48;
               }
+              
+              T2 = 0;
+              index += 4;
+              for (; page[index] != '&'; index++)
+              {
+                T2 *= 10;
+                T2 += (int) page[index] - 48;
+              }
 
               H2 = 0;
               index += 4;
@@ -588,6 +594,14 @@ void handleWebRequest()
               {
                 H2 *= 10;
                 H2 += (int) page[index] - 48;
+              }
+              
+              T3 = 0;
+              index += 4;
+              for (; page[index] != '&'; index++)
+              {
+                T3 *= 10;
+                T3 += (int) page[index] - 48;
               }
 
               H3 = 0;
@@ -656,11 +670,11 @@ void fanRecommend(EthernetClient cl)
       if (TEMPERATURE > T1 || HUMIDITY > H1)
       {
         cl.println("On at speed ");
-        if (HUMIDITY > H3)
+        if (HUMIDITY > H3||TEMPERATURE>T3)
           cl.println("3</p>");
-        else if (HUMIDITY > H2)
+        else if ((HUMIDITY > H2&&TEMPERATURE>T3)||(HUMIDITY>H1&&TEMPERATURE>T3))
           cl.println("2</p>");
-        else
+        else 
           cl.println("1</p>");
       }
       else
@@ -1083,7 +1097,7 @@ void sendAutoPage(EthernetClient cl)
   cl.println("<br/>");
   cl.print("Fan on above temperature:");
   cl.print("<input type=\"number\" name=\"T1\" id=\"T1\" min=0 max=\"");
-  cl.print(AC_CUTOFF);
+  cl.print(T2);
   cl.print("\" value=\"");
   cl.print(T1);
   cl.println("\" />");
@@ -1095,6 +1109,16 @@ void sendAutoPage(EthernetClient cl)
   cl.print("\" value=\"");
   cl.print(H1);
   cl.println("\" />");
+  
+  cl.println("<br/>");
+  cl.print("Fan speed 2 above temperature:");
+  cl.print("<input type=\"number\" name=\"T2\" id=\"T2\" min=\"");
+  cl.print(T1);
+  cl.print("\" max=\"");
+  cl.print(T3);
+  cl.print("\" value=\"");
+  cl.print(T2);
+  cl.println("\" />");
 
   cl.println("<br/>");
   cl.print("Fan speed 2 above humidity:");
@@ -1104,6 +1128,16 @@ void sendAutoPage(EthernetClient cl)
   cl.print(H3);
   cl.print("\" value=\"");
   cl.print(H2);
+  cl.println("\" />");
+  
+  cl.println("<br/>");
+  cl.print("Fan speed 3 above temperature:");
+  cl.print("<input type=\"number\" name=\"T3\" id=\"T3\" min=\"");
+  cl.print(T2);
+  cl.print("\" max=\"");
+  cl.print(AC_CUTOFF);
+  cl.print("\" value=\"");
+  cl.print(T3);
   cl.println("\" />");
 
   cl.println("<br/>");
