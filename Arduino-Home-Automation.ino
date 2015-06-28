@@ -332,13 +332,43 @@ void loop()
 
       if (LIGHT_INTENSITY < LIGHT_THRESHOLD) //dim(1) means highly dim, dim(3) is very bright
       {
-        L->on();
-        if (LIGHT_INTENSITY < L2)
+        if(L->getBrightLevel()==0)
+        {
+          if(LIGHT_INTENSITY<300)
           L->dim(3);
-        else if (LIGHT_INTENSITY < L1)
+          else if(LIGHT_INTENSITY<425)
           L->dim(2);
-        else
+          else if(LIGHT_INTENSITY<500)
           L->dim(1);
+          else L->off();
+        }
+        else if(L->getBrightLevel()==1)
+        {
+          if(LIGHT_INTENSITY<350)
+          L->dim(3);
+          else if(LIGHT_INTENSITY<425)
+          L->dim(2);
+          else if(LIGHT_INTENSITY>600)L->off();
+        }
+        else if(L->getBrightLevel()==2)
+        {
+          if(LIGHT_INTENSITY<400)
+          L->dim(3);
+          else if(LIGHT-INTENSITY<500)
+          L->dim(2);
+          else if(LIGHT_INTENSITY<600)
+          L=>dim(1);
+          else L->off();
+        }
+        else
+        {
+          if(LIGHT_INTENSITY<575)
+          L->dim(3);
+          else if(LIGHT_INTENSITY<675)
+          L->dim(2);
+          else
+          L->dim(1);
+        }
       }
       else
       {
@@ -528,7 +558,7 @@ void handleWebRequest()
                 value[3] = page[103];
                 byte reqTemp = ((byte) value[1] - 48) * 10 + ((byte) value[2] - 48);
                 byte reqSpeed = (byte) value[3] - 48;
-                /*if(AC1->getState()!=ON||AC1->getTemp()!=reqTemp||AC1->getFanSpeed()!=reqSpeed)*/AC1->set(reqTemp, reqSpeed);
+                if(AC1->getState()!=ON||AC1->getTemp()!=reqTemp||AC1->getFanSpeed()!=reqSpeed)AC1->set(reqTemp, reqSpeed);
               }
             }
             MODE = MANUAL_MODE;
