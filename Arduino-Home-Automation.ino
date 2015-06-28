@@ -38,15 +38,16 @@ int TEMPERATURE_T = 0;
 byte numDHTReadings = 0;
 byte numLDRReadings = 0;
 long measureTime = 0;
-byte TEMPERATURE = 0;
+byte TEMPERATURE_ACTUAL=0;
+byte TEMPERATURE =0;
 byte HUMIDITY = 0;
 int HUMIDITY_T = 0;
 
 boolean SENSOR_INITIALIZED = false;
 volatile boolean changeLaser=false;
 //Auto mode preferences
-byte FAN_CUTOFF = 28; //temperature above which fan is switched off and AC is switched on
-byte AC_CUTOFF = 24; //temperature below which AC is switched off and fan is switched on
+byte FAN_CUTOFF = 25; //temperature above which fan is switched off and AC is switched on
+byte AC_CUTOFF = 23; //temperature below which AC is switched off and fan is switched on
 byte AC_AMBIENT_TEMP = 22;
 byte DEFAULT_AC_FAN_SPEED = 1;
 
@@ -201,7 +202,7 @@ void setup()
   F1 = new Fan(fanRegulatePins, 3);
   L = new Light(lightRegulatePins, 3);
   AC1 = new AirConditioner(600, 470, 1550, 4400, 4300, 5000, 38, data, offData, 14, 3, 9, 30, 17);
-  //Serial.begin(9600);
+  Serial.begin(9600);
   // start the Ethernet connection and the server:
   Ethernet.begin(mac);
   //Serial.println("HELLO");
@@ -399,7 +400,7 @@ void readSensorData()
     }
     else if (numDHTReadings == COUNT_VAL)
     {
-      TEMPERATURE = (byte) (TEMPERATURE_T / COUNT_VAL);
+      TEMPERATURE_ACTUAL = (byte) (TEMPERATURE_T / COUNT_VAL);
       HUMIDITY = (byte) (HUMIDITY_T / COUNT_VAL);
       numDHTReadings = 0;
       TEMPERATURE_T = 0;
@@ -415,7 +416,7 @@ void readSensorData()
   else
   {
 
-    TEMPERATURE = hs.getTemperature();
+    TEMPERATURE_ACTUAL = hs.getTemperature();
     HUMIDITY = hs.getHumidity();
     TEMPERATURE_T += TEMPERATURE;
     HUMIDITY_T += HUMIDITY;
@@ -453,6 +454,7 @@ void readSensorData()
     LIGHT_INTENSITY = (int) (rawLightIntensity[0] + rawLightIntensity[1] + rawLightIntensity[2] + rawLightIntensity[3]) / 4;
   }
   if (!SENSOR_INITIALIZED)SENSOR_INITIALIZED = true;
+  TEMPERATURE=TEMPERATURE_ACTUAL-5;
 }
 
 void handleWebRequest()
