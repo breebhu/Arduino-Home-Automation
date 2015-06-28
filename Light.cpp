@@ -39,6 +39,7 @@ byte Light::off()
   for (int j = 0; j < levels; j++)digitalWrite(dimPins[j], LOW);
   digitalWrite(mainPin, LOW);
   LIGHT_STATE = (byte)STATE_OFF;
+  BRIGHT_LEVEL=0;
   return LIGHT_STATE;
 }
 
