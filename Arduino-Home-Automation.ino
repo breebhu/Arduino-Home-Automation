@@ -30,7 +30,7 @@ volatile byte MODE = AUTO_MODE;
 
 //Sensors
 const byte COUNT_VAL = 25;
-volatile byte NUM_PERSONS = 0;
+volatile byte NUM_PERSONS = 1;
 int LIGHT_INTENSITY = 0;
 int rawLightIntensity[4] = { 0, 0, 0, 0 };
 int rawLightIntensity_T[4] = { 0, 0, 0, 0 };
@@ -355,10 +355,10 @@ void loop()
         {
           if(LIGHT_INTENSITY<400)
           L->dim(3);
-          else if(LIGHT-INTENSITY<500)
+          else if(LIGHT_INTENSITY<500)
           L->dim(2);
           else if(LIGHT_INTENSITY<600)
-          L=>dim(1);
+          L->dim(1);
           else L->off();
         }
         else
