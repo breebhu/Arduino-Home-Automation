@@ -1,3 +1,9 @@
+/*
+ * Class for fan control.
+ * Sets the pins to high as required.
+ * The setup could be either a main pin for on/off and pins for speed levels or pins for only speed levels (all pins low means off). The functions take care of it.
+ */
+
 #ifndef FAN_H
 #define FAN_H
 #include <Arduino.h>

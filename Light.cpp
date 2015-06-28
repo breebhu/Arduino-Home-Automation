@@ -1,5 +1,4 @@
 #include "Light.h"
-//#include <Arduino.h>
 Light::Light(byte mpin, byte* pins, byte numLevel)
 {
   mainPin = mpin;

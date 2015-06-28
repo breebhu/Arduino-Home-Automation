@@ -1,5 +1,5 @@
 #include "Fan.h"
-//#include<Arduino.h>
+
 Fan::Fan(byte mpin, byte* pins, byte numLevel)
 {
   mainPin = mpin;
@@ -30,11 +30,11 @@ Fan::~Fan()
 {
 }
 
-byte Fan::on()
+byte Fan::on()  
 {
   regulate(levels);
   digitalWrite(mainPin, HIGH);
-  return (byte)FAN_STATE;	//Is it really necessary to return?
+  return (byte)FAN_STATE;
 }
 
 byte Fan::off()

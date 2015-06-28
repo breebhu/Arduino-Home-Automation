@@ -1,3 +1,7 @@
+/*
+ * Library for reading from SL-HS-220.
+ * The conversion values are taken from the datasheet.
+ */
 #ifndef HS_H
 #define HS_H
 

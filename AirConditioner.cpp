@@ -21,6 +21,7 @@ void AirConditioner::set(byte temperature, byte fspeed)
 }
 void AirConditioner::sendData(unsigned long data0, unsigned long data01)
 {
+  //Signal sent twice. mark() ,space() are a part of IRremote library.
   irsend.enableIROut(frequency);
   unsigned long data02 = data0;
   unsigned long data03 = data01;

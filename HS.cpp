@@ -31,7 +31,7 @@ int HS::getTemperature()
 {
 	rawData = analogRead(temperaturePin);
 	voltageEquivalent = map(rawData, 0, 1023, 0, 5000);
-	resistanceEquivalent = voltageEquivalent*pullDownResistor / (5000 - voltageEquivalent);
+	resistanceEquivalent = (float)voltageEquivalent*pullDownResistor / (5000 - voltageEquivalent);
 	
 	while (resistanceEquivalent < thermistorTable[temperature])
 		temperature++;
