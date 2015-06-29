@@ -89,7 +89,7 @@ byte LDR_PIN[4] = { A2, A3, A4, A5 };        //Use different pin if required
 //Store lines for displaying on LCD
 String lcdLine1 = "    WELCOME   ";
 String lcdLine2 = "";
-const int lcdCount_T = 100;
+const int lcdCount_T = 1000;
 int lcdCount = 0;
 boolean changeLCD=false;
 
@@ -215,11 +215,7 @@ void setup()
   AC1 = new AirConditioner(600, 470, 1550, 4400, 4300, 5000, 38, data, offData, 14, 3, 9, 30, 17);
   // start the Ethernet connection and the server:
   Ethernet.begin(mac);
-  //Serial.println("HELLO");
   server.begin();
-  //attachInterrupt(2, switchFan, CHANGE);
-  //attachInterrupt(3, switchLight, CHANGE);
-  //Serial.println(Ethernet.localIP());
   delay(2000);
   lcdLine1 = "TEMP:   RH:     ";
   lcd.setCursor(0, 0);
@@ -250,7 +246,7 @@ void loop()
   readSensorData();
 
   //display current states on LCD and modify only after certain number of loop runs
-  if (lcdCount < lcdCount_T && !changeLCD)
+  if (lcdCount == lcdCount_T && !changeLCD)
   {
     lcd.setCursor(0, 0);
     lcdLine1 = lcdLine1.substring(0, 5) + TEMPERATURE + lcdLine1.substring(7, 11) + HUMIDITY + "%   ";
@@ -272,19 +268,23 @@ void loop()
     for(int i=0;i<16-lcdLine2.length();i++)lcdLine2=lcdLine2+" ";
     lcd.setCursor(0, 1);
     lcd.print(lcdLine2);
-    lcdCount++;
+    lcdCount=0;
   }
   else
   {
-    lcdCount = 0;
-    changeLCD=false;
+    lcdCount++;
+    if(changeLCD)
+    {
+      changeLCD=false;
+      lcdCount=0;
+    }
   }
 
   //display on LCD the number of persons in room if an entry or exit is detected
   if(changeLaser)
   {
     lcd.setCursor(0,0);
-    String tmp="NUM PERSONS:"+NUM_PERSONS;
+    String tmp="NUM PERSONS:"+NUM_PERSONS+"";
     for(int i=0;i<16-tmp.length();i++)tmp=tmp+" ";
     lcd.print(tmp);
     changeLCD=true;
@@ -317,7 +317,11 @@ void loop()
         if (F1->getState() != OFF)
           F1->off();
         if (AC1->getState() != ON || AC1->getTemp() != AC_AMBIENT_TEMP || AC1->getFanSpeed() != DEFAULT_AC_FAN_SPEED)
+        {
+          noInterrupts();
           AC1->set(AC_AMBIENT_TEMP, DEFAULT_AC_FAN_SPEED);
+          interrupts();
+        }
 
       }
       else
@@ -325,7 +329,11 @@ void loop()
         if (TEMPERATURE < AC_CUTOFF)
         {
           if (AC1->getState() == ON)
+          {
+            noInterrupts();
             AC1->off();
+            interrupts();
+          }
         }
 
         if ((TEMPERATURE > T1 || HUMIDITY > H1) && AC1->getState() == OFF)
@@ -391,7 +399,12 @@ void loop()
     }
     else
     {
-      if(AC1->getState()!=OFF)AC1->off();
+      if(AC1->getState()!=OFF)
+      {
+            noInterrupts();
+            AC1->off();
+            interrupts();
+      }
       F1->off();
       L->off();
     }
@@ -569,7 +582,14 @@ void handleWebRequest()
               //Set AC
               value[0] = page[76];
               if (value[0] == '0')
-                /*if(AC1->getState()!=OFF)*/AC1->off();
+              {
+                if(AC1->getState()!=OFF)
+                {
+                  noInterrupts();
+                  AC1->off();
+                  interrupts();
+                }
+              }
               else
               {
                 value[1] = page[92];   //Temperature
@@ -577,7 +597,12 @@ void handleWebRequest()
                 value[3] = page[103];
                 byte reqTemp = ((byte) value[1] - 48) * 10 + ((byte) value[2] - 48);
                 byte reqSpeed = (byte) value[3] - 48;
-                if(AC1->getState()!=ON||AC1->getTemp()!=reqTemp||AC1->getFanSpeed()!=reqSpeed)AC1->set(reqTemp, reqSpeed);
+                if(AC1->getState()!=ON||AC1->getTemp()!=reqTemp||AC1->getFanSpeed()!=reqSpeed)
+                {
+                  noInterrupts();
+                  AC1->set(reqTemp, reqSpeed);
+                  interrupts();
+                }
               }
             }
             MODE = MANUAL_MODE;
